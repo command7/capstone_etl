@@ -210,3 +210,5 @@ fabric.properties
 .idea/caches/build_file_checksums.ser
 
 aws_config.cfg
+test.py
+Reference.py
