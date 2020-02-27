@@ -2,6 +2,7 @@ import configparser
 import os
 import boto3
 
+
 class S3Manager:
 
     def __init__(self):
@@ -9,10 +10,21 @@ class S3Manager:
 
         self.s3_resource = boto3.resource('s3')
 
-        self.parseConfigurations()
+        self.parse_configurations()
 
+    def get_principals_bucket(self):
+        return self.bucket_details["title_principals"]
 
-    def parseConfigurations(self):
+    def get_name_bucket(self):
+        return self.bucket_details["name_basics"]
+
+    def get_basics_bucket(self):
+        return self.bucket_details["title_basics"]
+
+    def get_ratings_bucket(self):
+        return self.bucket_details["title_ratings"]
+
+    def parse_configurations(self):
         conf_parser = configparser.ConfigParser()
         conf_parser.read_file(open("aws_config.cfg", "r"))
 
@@ -26,5 +38,3 @@ class S3Manager:
         self.bucket_details["name_basics"] = conf_parser["S3_Bucket"]["NAME_BASICS"]
         self.bucket_details["title_principals"] = conf_parser["S3_Bucket"]["TITLE_PRINCIPALS"]
         self.bucket_details["title_ratings"] = conf_parser["S3_Bucket"]["TITLE_RATINGS"]
-
-
