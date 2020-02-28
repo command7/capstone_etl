@@ -1,14 +1,15 @@
 import configparser
 import os
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class S3Manager:
 
     def __init__(self):
-        self.current_hour = datetime.now().hour
+        self.initiation_time = datetime.now(timezone.utc)
         self.bucket_details = dict()
+        self.file_upload_times = dict()
 
         self.parse_configurations()
 
@@ -20,9 +21,16 @@ class S3Manager:
         self.name_basics_paths = list()
 
         self.parse_bucket_for_keys()
+        self.remove_conflicting_files()
 
-    def get_current_hour(self):
-        return self.current_hour
+    def get_initiation_time(self):
+        return self.initiation_time
+
+    def add_file_upload_time(self, file_name, file_upload_time):
+        self.file_upload_times[file_name] = datetime.fromisoformat(str(file_upload_time))
+
+    def get_file_upload_time(self, file_name):
+        return self.file_upload_times[file_name]
 
     def get_principals_bucket(self):
         return self.bucket_details["title_principals"]
@@ -47,6 +55,18 @@ class S3Manager:
 
     def get_names_paths(self):
         return self.name_basics_paths
+
+    def delete_basic_path(self, basic_path_to_delete):
+        self.title_basics_paths.remove(basic_path_to_delete)
+
+    def delete_principal_path(self, principal_path_to_delete):
+        self.title_principals_paths.remove(principal_path_to_delete)
+
+    def delete_rating_path(self, rating_path_to_delete):
+        self.title_ratings_paths.remove(rating_path_to_delete)
+
+    def delete_name_path(self, name_path_to_delete):
+        self.name_basics_paths.remove(name_path_to_delete)
 
     def add_basic_path(self, basic_path_to_add):
         self.title_ratings_paths.append(basic_path_to_add)
@@ -79,24 +99,28 @@ class S3Manager:
         basics_bucket = self.s3_resource.Bucket(self.get_basics_bucket())
         for each_file_path in basics_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_basics_bucket()}/{each_file_path.key}"
+            self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
             self.add_basic_path(formatted_file_path)
 
     def get_principal_keys(self):
         principals_bucket = self.s3_resource.Bucket(self.get_principals_bucket())
         for each_file_path in principals_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_principals_bucket()}/{each_file_path.key}"
+            self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
             self.add_principal_path(formatted_file_path)
 
     def get_rating_keys(self):
         ratings_bucket = self.s3_resource.Bucket(self.get_ratings_bucket())
         for each_file_path in ratings_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_ratings_bucket()}/{each_file_path.key}"
+            self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
             self.add_rating_path(formatted_file_path)
 
     def get_name_keys(self):
         name_bucket = self.s3_resource.Bucket(self.get_name_bucket())
         for each_file_path in name_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_name_bucket()}/{each_file_path.key}"
+            self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
             self.add_name_path(formatted_file_path)
 
     def parse_bucket_for_keys(self):
@@ -109,20 +133,41 @@ class S3Manager:
         basics_bucket = self.s3_resource.Bucket(self.get_basics_bucket())
         for each_item in basics_bucket.objects.all():
             formatted = f"s3a://{self.get_basics_bucket()}/{each_item.key}"
+            # print(type(each_item.last_modified))
             print(formatted)
+            print(self.is_file_too_recent(formatted))
+            print("\n\n")
 
-    def extract_hour_from_path(self, s3_path_to_parse):
-        return int(s3_path_to_parse.split("/")[6])
+    def get_minutes_difference(self, old_time):
+        diff_datetime = self.get_initiation_time() - old_time
+        diff_minutes = (diff_datetime.days * 24 * 60) + (diff_datetime.seconds / 60)
+        return int(diff_minutes)
 
     def is_file_too_recent(self, file_path_to_check):
-        file_uploaded_hour = self.extract_hour_from_path(file_path_to_check)
-        if file_uploaded_hour == self.get_current_hour():
+        file_upload_date = self.get_file_upload_time(file_path_to_check)
+        if self.get_minutes_difference(file_upload_date) < 5:
             return True
         return False
+
+    def remove_conflicting_files(self):
+        for each_basic_file in self.get_basic_keys():
+            if self.is_file_too_recent(each_basic_file):
+                self.delete_basic_path(each_basic_file)
+
+        for each_principal_file in self.get_principal_keys():
+            if self.is_file_too_recent(each_principal_file):
+                self.delete_principal_path(each_principal_file)
+
+        for each_rating_file in self.get_rating_keys():
+            if self.is_file_too_recent(each_rating_file):
+                self.delete_rating_path(each_rating_file)
+
+        for each_name_file in self.get_name_keys():
+            if self.is_file_too_recent(each_name_file):
+                self.delete_name_path(each_name_file)
 
 
 if __name__ == "__main__":
     s3_manager = S3Manager()
-    # s3_manager.list_all_contents()
-    t = "s3a://imdbtitlebasics/2020/02/23/21/title_basics-3-2020-02-23-23-48-23-7bf2e891-13e6-450b-9f38-aad628d1e7e7.parquet"
-    print(s3_manager.extract_hour_from_path(t))
+    s3_manager.list_all_contents()
+
