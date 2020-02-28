@@ -1,11 +1,13 @@
 import configparser
 import os
 import boto3
+from datetime import datetime
 
 
 class S3Manager:
 
     def __init__(self):
+        self.current_hour = datetime.now().hour
         self.bucket_details = dict()
 
         self.parse_configurations()
@@ -18,6 +20,9 @@ class S3Manager:
         self.name_basics_paths = list()
 
         self.parse_bucket_for_keys()
+
+    def get_current_hour(self):
+        return self.current_hour
 
     def get_principals_bucket(self):
         return self.bucket_details["title_principals"]
