@@ -41,6 +41,18 @@ class S3Manager:
     def get_names_paths(self):
         return self.name_basics_paths
 
+    def add_basic_path(self, basic_path_to_add):
+        self.title_ratings_paths.append(basic_path_to_add)
+
+    def add_principal_path(self, principal_path_to_add):
+        self.title_principals_paths.append(principal_path_to_add)
+
+    def add_rating_path(self, rating_path_to_add):
+        self.title_ratings_paths.append(rating_path_to_add)
+
+    def add_name_path(self, name_path_to_add):
+        self.name_basics_paths.append(name_path_to_add)
+
     def parse_configurations(self):
         conf_parser = configparser.ConfigParser()
         conf_parser.read_file(open("aws_config.cfg", "r"))
