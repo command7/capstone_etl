@@ -20,7 +20,7 @@ class S3Manager:
         self.title_ratings_paths = list()
         self.name_basics_paths = list()
 
-        self.parse_bucket_for_keys()
+        self.parse_buckets_for_keys()
         self.remove_conflicting_files()
 
     def get_initiation_time(self):
@@ -95,39 +95,39 @@ class S3Manager:
         self.bucket_details["title_principals"] = conf_parser["S3_Bucket"]["TITLE_PRINCIPALS"]
         self.bucket_details["title_ratings"] = conf_parser["S3_Bucket"]["TITLE_RATINGS"]
 
-    def get_basic_keys(self):
+    def parse_basics_bucket(self):
         basics_bucket = self.s3_resource.Bucket(self.get_basics_bucket())
         for each_file_path in basics_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_basics_bucket()}/{each_file_path.key}"
             self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
             self.add_basic_path(formatted_file_path)
 
-    def get_principal_keys(self):
+    def parse_principals_bucket(self):
         principals_bucket = self.s3_resource.Bucket(self.get_principals_bucket())
         for each_file_path in principals_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_principals_bucket()}/{each_file_path.key}"
             self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
             self.add_principal_path(formatted_file_path)
 
-    def get_rating_keys(self):
+    def parse_ratings_bucket(self):
         ratings_bucket = self.s3_resource.Bucket(self.get_ratings_bucket())
         for each_file_path in ratings_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_ratings_bucket()}/{each_file_path.key}"
             self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
             self.add_rating_path(formatted_file_path)
 
-    def get_name_keys(self):
+    def parse_names_bucket(self):
         name_bucket = self.s3_resource.Bucket(self.get_name_bucket())
         for each_file_path in name_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_name_bucket()}/{each_file_path.key}"
             self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
             self.add_name_path(formatted_file_path)
 
-    def parse_bucket_for_keys(self):
-        self.get_basic_keys()
-        self.get_principal_keys()
-        self.get_rating_keys()
-        self.get_name_keys()
+    def parse_buckets_for_keys(self):
+        self.parse_basics_bucket()
+        self.parse_principals_bucket()
+        self.parse_ratings_bucket()
+        self.parse_names_bucket()
 
     def list_all_contents(self):
         print("Title Basic Files")
