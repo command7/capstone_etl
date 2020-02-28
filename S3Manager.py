@@ -119,6 +119,20 @@ class S3Manager:
             if not self.is_file_too_recent(file_upload_time):
                 self.add_name_path(formatted_file_path)
 
+    def extract_processing_bucket_info(self, file_path_to_process):
+        path_components = file_path_to_process.split("/")
+        file_path_bucket = path_components[2]
+        old_file_path = "/".join(path_components[3:])
+        new_file_path = "processing/" + "/".join(path_components[4:])
+        return file_path_bucket, old_file_path, new_file_path
+    # def move_files_to_processing_bucket(self):
+    #     copy_source = {
+    #         'Bucket': 'imdbtitlebasics',
+    #         'Key': '2020/02/23/23/title_basics-3-2020-02-23-23-48-23-7bf2e891-13e6-450b-9f38-aad628d1e7e7.parquet'
+    #     }
+    # s3_resource.meta.client.copy(copy_source, 'imdbtitlebasics',
+    #                              'processing/2020/02/23/23/title_basics-3-2020-02-23-23-48-23-7bf2e891-13e6-450b-9f38-aad628d1e7e7.parquet')
+
     def parse_buckets_for_keys(self):
         self.parse_basics_bucket()
         self.parse_principals_bucket()
