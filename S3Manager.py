@@ -106,7 +106,11 @@ class S3Manager:
             formatted = f"s3a://{self.get_basics_bucket()}/{each_item.key}"
             print(formatted)
 
+    def extract_hour_from_path(self, s3_path_to_parse):
+        return int(s3_path_to_parse.split("/")[6])
 
 if __name__ == "__main__":
     s3_manager = S3Manager()
-    s3_manager.list_all_contents()
+    # s3_manager.list_all_contents()
+    t = "s3a://imdbtitlebasics/2020/02/23/21/title_basics-3-2020-02-23-23-48-23-7bf2e891-13e6-450b-9f38-aad628d1e7e7.parquet"
+    print(s3_manager.extract_hour_from_path(t))
