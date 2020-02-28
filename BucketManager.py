@@ -111,7 +111,7 @@ class BucketManager:
         return int(diff_minutes)
 
     def is_file_too_recent(self, file_upload_date):
-        if self.get_minutes_difference(file_upload_date) < 0:
+        if self.get_minutes_difference(file_upload_date) < 3:
             return True
         return False
 

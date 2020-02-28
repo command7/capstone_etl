@@ -51,6 +51,18 @@ class S3Manager:
         print("\nName Basics\n")
         self.list_all_name_files()
 
+    def get_processing_path_for_basics(self):
+        return self.get_title_basics_manager().get_path_to_process()
+
+    def get_processing_path_for_principals(self):
+        return self.get_title_principals_manager().get_path_to_process()
+
+    def get_processing_path_for_ratings(self):
+        return self.get_title_ratings_manager().get_path_to_process()
+
+    def get_processing_path_for_names(self):
+        return self.get_name_basics_manager().get_path_to_process()
+
 if __name__ == "__main__":
     s3_manager = S3Manager()
     s3_manager.list_all_files()
