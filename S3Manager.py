@@ -21,7 +21,6 @@ class S3Manager:
         self.name_basics_paths = list()
 
         self.parse_buckets_for_keys()
-        self.remove_conflicting_files()
 
     def get_initiation_time(self):
         return self.initiation_time
@@ -99,29 +98,33 @@ class S3Manager:
         basics_bucket = self.s3_resource.Bucket(self.get_basics_bucket())
         for each_file_path in basics_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_basics_bucket()}/{each_file_path.key}"
-            self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
-            self.add_basic_path(formatted_file_path)
+            file_upload_time = datetime.fromisoformat(str(each_file_path.last_modified))
+            if not self.is_file_too_recent(file_upload_time):
+                self.add_basic_path(formatted_file_path)
 
     def parse_principals_bucket(self):
         principals_bucket = self.s3_resource.Bucket(self.get_principals_bucket())
         for each_file_path in principals_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_principals_bucket()}/{each_file_path.key}"
-            self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
-            self.add_principal_path(formatted_file_path)
+            file_upload_time = datetime.fromisoformat(str(each_file_path.last_modified))
+            if not self.is_file_too_recent(file_upload_time):
+                self.add_principal_path(formatted_file_path)
 
     def parse_ratings_bucket(self):
         ratings_bucket = self.s3_resource.Bucket(self.get_ratings_bucket())
         for each_file_path in ratings_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_ratings_bucket()}/{each_file_path.key}"
-            self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
-            self.add_rating_path(formatted_file_path)
+            file_upload_time = datetime.fromisoformat(str(each_file_path.last_modified))
+            if not self.is_file_too_recent(file_upload_time):
+                self.add_rating_path(formatted_file_path)
 
     def parse_names_bucket(self):
         name_bucket = self.s3_resource.Bucket(self.get_name_bucket())
         for each_file_path in name_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_name_bucket()}/{each_file_path.key}"
-            self.add_file_upload_time(formatted_file_path, each_file_path.last_modified)
-            self.add_name_path(formatted_file_path)
+            file_upload_time = datetime.fromisoformat(str(each_file_path.last_modified))
+            if not self.is_file_too_recent(file_upload_time):
+                self.add_name_path(formatted_file_path)
 
     def parse_buckets_for_keys(self):
         self.parse_basics_bucket()
@@ -155,8 +158,8 @@ class S3Manager:
         diff_minutes = (diff_datetime.days * 24 * 60) + (diff_datetime.seconds / 60)
         return int(diff_minutes)
 
-    def is_file_too_recent(self, file_path_to_check):
-        file_upload_date = self.get_file_upload_time(file_path_to_check)
+    def is_file_too_recent(self, file_upload_date):
+        # file_upload_date = self.get_file_upload_time(file_path_to_check)
         if self.get_minutes_difference(file_upload_date) < 5:
             return True
         return False
