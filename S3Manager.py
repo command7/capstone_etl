@@ -8,7 +8,7 @@ class S3Manager:
 
     def __init__(self):
         self.initiation_time = datetime.now(timezone.utc)
-        self.bucket_details = dict()
+        self.bucket_names = dict()
 
         self.parse_configurations()
 
@@ -25,16 +25,16 @@ class S3Manager:
         return self.initiation_time
 
     def get_principals_bucket(self):
-        return self.bucket_details["title_principals"]
+        return self.bucket_names["title_principals"]
 
     def get_name_bucket(self):
-        return self.bucket_details["name_basics"]
+        return self.bucket_names["name_basics"]
 
     def get_basics_bucket(self):
-        return self.bucket_details["title_basics"]
+        return self.bucket_names["title_basics"]
 
     def get_ratings_bucket(self):
-        return self.bucket_details["title_ratings"]
+        return self.bucket_names["title_ratings"]
 
     def get_basics_paths(self):
         return self.title_basics_paths
@@ -82,10 +82,10 @@ class S3Manager:
         os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key
         os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_key
 
-        self.bucket_details["title_basics"] = conf_parser["S3_Bucket"]["TITLE_BASICS"]
-        self.bucket_details["name_basics"] = conf_parser["S3_Bucket"]["NAME_BASICS"]
-        self.bucket_details["title_principals"] = conf_parser["S3_Bucket"]["TITLE_PRINCIPALS"]
-        self.bucket_details["title_ratings"] = conf_parser["S3_Bucket"]["TITLE_RATINGS"]
+        self.bucket_names["title_basics"] = conf_parser["S3_Bucket"]["TITLE_BASICS"]
+        self.bucket_names["name_basics"] = conf_parser["S3_Bucket"]["NAME_BASICS"]
+        self.bucket_names["title_principals"] = conf_parser["S3_Bucket"]["TITLE_PRINCIPALS"]
+        self.bucket_names["title_ratings"] = conf_parser["S3_Bucket"]["TITLE_RATINGS"]
 
     def parse_basics_bucket(self):
         basics_bucket = self.s3_resource.Bucket(self.get_basics_bucket())
@@ -177,4 +177,5 @@ class S3Manager:
 if __name__ == "__main__":
     s3_manager = S3Manager()
     s3_manager.list_all_contents()
+    print(s3_manager.extract_processing_bucket_info(s3_manager.get_basics_paths()[0]))
 
