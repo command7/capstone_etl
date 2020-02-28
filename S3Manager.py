@@ -9,7 +9,6 @@ class S3Manager:
     def __init__(self):
         self.initiation_time = datetime.now(timezone.utc)
         self.bucket_details = dict()
-        self.file_upload_times = dict()
 
         self.parse_configurations()
 
@@ -24,12 +23,6 @@ class S3Manager:
 
     def get_initiation_time(self):
         return self.initiation_time
-
-    def add_file_upload_time(self, file_name, file_upload_time):
-        self.file_upload_times[file_name] = datetime.fromisoformat(str(file_upload_time))
-
-    def get_file_upload_time(self, file_name):
-        return self.file_upload_times[file_name]
 
     def get_principals_bucket(self):
         return self.bucket_details["title_principals"]
@@ -159,7 +152,6 @@ class S3Manager:
         return int(diff_minutes)
 
     def is_file_too_recent(self, file_upload_date):
-        # file_upload_date = self.get_file_upload_time(file_path_to_check)
         if self.get_minutes_difference(file_upload_date) < 5:
             return True
         return False
