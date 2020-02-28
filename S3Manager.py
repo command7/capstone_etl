@@ -17,6 +17,8 @@ class S3Manager:
         self.title_ratings_paths = list()
         self.name_basics_paths = list()
 
+        self.parse_bucket_for_keys()
+
     def get_principals_bucket(self):
         return self.bucket_details["title_principals"]
 
@@ -68,11 +70,35 @@ class S3Manager:
         self.bucket_details["title_principals"] = conf_parser["S3_Bucket"]["TITLE_PRINCIPALS"]
         self.bucket_details["title_ratings"] = conf_parser["S3_Bucket"]["TITLE_RATINGS"]
 
-    def get_basic_files(self):
+    def get_basic_keys(self):
         basics_bucket = self.s3_resource.Bucket(self.get_basics_bucket())
         for each_file_path in basics_bucket.objects.all():
             formatted_file_path = f"s3a://{self.get_basics_bucket()}/{each_file_path.key}"
             self.add_basic_path(formatted_file_path)
+
+    def get_principal_keys(self):
+        principals_bucket = self.s3_resource.Bucket(self.get_principals_bucket())
+        for each_file_path in principals_bucket.objects.all():
+            formatted_file_path = f"s3a://{self.get_principals_bucket()}/{each_file_path.key}"
+            self.add_principal_path(formatted_file_path)
+
+    def get_rating_keys(self):
+        ratings_bucket = self.s3_resource.Bucket(self.get_ratings_bucket())
+        for each_file_path in ratings_bucket.objects.all():
+            formatted_file_path = f"s3a://{self.get_ratings_bucket()}/{each_file_path.key}"
+            self.add_rating_path(formatted_file_path)
+
+    def get_name_keys(self):
+        name_bucket = self.s3_resource.Bucket(self.get_name_bucket())
+        for each_file_path in name_bucket.objects.all():
+            formatted_file_path = f"s3a://{self.get_name_bucket()}/{each_file_path.key}"
+            self.add_name_path(formatted_file_path)
+
+    def parse_bucket_for_keys(self):
+        self.get_basic_keys()
+        self.get_principal_keys()
+        self.get_rating_keys()
+        self.get_name_keys()
 
     def list_all_contents(self):
         basics_bucket = self.s3_resource.Bucket(self.get_basics_bucket())
