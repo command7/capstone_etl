@@ -69,7 +69,7 @@ class S3Manager:
         self.name_basics_paths.remove(name_path_to_delete)
 
     def add_basic_path(self, basic_path_to_add):
-        self.title_ratings_paths.append(basic_path_to_add)
+        self.title_basics_paths.append(basic_path_to_add)
 
     def add_principal_path(self, principal_path_to_add):
         self.title_principals_paths.append(principal_path_to_add)
@@ -130,13 +130,25 @@ class S3Manager:
         self.get_name_keys()
 
     def list_all_contents(self):
-        basics_bucket = self.s3_resource.Bucket(self.get_basics_bucket())
-        for each_item in basics_bucket.objects.all():
-            formatted = f"s3a://{self.get_basics_bucket()}/{each_item.key}"
-            # print(type(each_item.last_modified))
-            print(formatted)
-            print(self.is_file_too_recent(formatted))
-            print("\n\n")
+        print("Title Basic Files")
+        for each_basic_file in self.get_basics_paths():
+            print(each_basic_file)
+        print("\n\n")
+
+        print("Title Principal Files")
+        for each_principal_file in self.get_principals_paths():
+            print(each_principal_file)
+        print("\n\n")
+
+        print("Title Rating Files")
+        for each_rating_file in self.get_ratings_paths():
+            print(each_rating_file)
+        print("\n\n")
+
+        print("Name Basic Files")
+        for each_name_file in self.get_names_paths():
+            print(each_name_file)
+        print("\n\n")
 
     def get_minutes_difference(self, old_time):
         diff_datetime = self.get_initiation_time() - old_time
@@ -150,19 +162,19 @@ class S3Manager:
         return False
 
     def remove_conflicting_files(self):
-        for each_basic_file in self.get_basic_keys():
+        for each_basic_file in self.get_basics_paths():
             if self.is_file_too_recent(each_basic_file):
                 self.delete_basic_path(each_basic_file)
 
-        for each_principal_file in self.get_principal_keys():
+        for each_principal_file in self.get_principals_paths():
             if self.is_file_too_recent(each_principal_file):
                 self.delete_principal_path(each_principal_file)
 
-        for each_rating_file in self.get_rating_keys():
+        for each_rating_file in self.get_ratings_paths():
             if self.is_file_too_recent(each_rating_file):
                 self.delete_rating_path(each_rating_file)
 
-        for each_name_file in self.get_name_keys():
+        for each_name_file in self.get_names_paths():
             if self.is_file_too_recent(each_name_file):
                 self.delete_name_path(each_name_file)
 
