@@ -68,10 +68,17 @@ class S3Manager:
         self.bucket_details["title_principals"] = conf_parser["S3_Bucket"]["TITLE_PRINCIPALS"]
         self.bucket_details["title_ratings"] = conf_parser["S3_Bucket"]["TITLE_RATINGS"]
 
+    def get_basic_files(self):
+        basics_bucket = self.s3_resource.Bucket(self.get_basics_bucket())
+        for each_file_path in basics_bucket.objects.all():
+            formatted_file_path = f"s3a://{self.get_basics_bucket()}/{each_file_path.key}"
+            self.add_basic_path(formatted_file_path)
+
     def list_all_contents(self):
         basics_bucket = self.s3_resource.Bucket(self.get_basics_bucket())
         for each_item in basics_bucket.objects.all():
-            print(each_item.key)
+            formatted = f"s3a://{self.get_basics_bucket()}/{each_item.key}"
+            print(formatted)
 
 
 if __name__ == "__main__":
