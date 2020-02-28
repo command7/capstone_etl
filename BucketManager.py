@@ -11,7 +11,7 @@ class BucketManager:
         self.bucket_name = None
         self.file_paths = list()
 
-        self.parse_configurations()
+        BucketManager.parse_configurations()
 
     def get_s3_resource(self):
         return self.s3_resource
@@ -37,7 +37,8 @@ class BucketManager:
     def add_file_path(self, file_path_to_add):
         self.file_paths.append(file_path_to_add)
 
-    def get_bucket_name_from_config(self, entity_name):
+    @staticmethod
+    def get_bucket_name_from_config(entity_name):
         conf_parser = configparser.ConfigParser()
         conf_parser.read_file(open("aws_config.cfg", "r"))
 
@@ -46,7 +47,8 @@ class BucketManager:
     def construct_complete_s3_address(self, file_key):
         return f"s3a://{self.get_bucket_name()}/{file_key}"
 
-    def parse_configurations(self):
+    @staticmethod
+    def parse_configurations():
         conf_parser = configparser.ConfigParser()
         conf_parser.read_file(open("aws_config.cfg", "r"))
 
@@ -61,25 +63,27 @@ class BucketManager:
         for each_file_path in s3_bucket.objects.all():
             formatted_file_path = self.construct_complete_s3_address(each_file_path.key)
             file_upload_time = datetime.fromisoformat(str(each_file_path.last_modified))
-            if self.is_file_to_be_processed(each_file_path.key) and not self.is_file_too_recent(file_upload_time):
+            if BucketManager.is_file_to_be_processed(each_file_path.key) and not self.is_file_too_recent(file_upload_time):
                 self.add_file_path(formatted_file_path)
 
-    def extract_processing_bucket_info(self, file_path_to_process):
+    @staticmethod
+    def extract_processing_bucket_info(file_path_to_process):
         path_components = file_path_to_process.split("/")
         file_path_bucket = path_components[2]
         old_file_path = "/".join(path_components[3:])
         new_file_path = "processing/" + "/".join(path_components[4:])
         return file_path_bucket, old_file_path, new_file_path
 
-    def construct_copy_json(self, source_bucket_name, old_file_path):
+    @staticmethod
+    def construct_copy_json(source_bucket_name, old_file_path):
         return {
             'Bucket': source_bucket_name,
             'Key': old_file_path
         }
 
     def move_file_to_processing_status(self, file_path_to_move):
-        file_path_bucket, old_file_path, new_file_path = self.extract_processing_bucket_info(file_path_to_move)
-        source_json = self.construct_copy_json(file_path_bucket, old_file_path)
+        file_path_bucket, old_file_path, new_file_path = BucketManager.extract_processing_bucket_info(file_path_to_move)
+        source_json = BucketManager.construct_copy_json(file_path_bucket, old_file_path)
         self.get_s3_resource().meta.client.copy(source_json,
                                                 file_path_bucket,
                                                 new_file_path)
@@ -104,7 +108,8 @@ class BucketManager:
             return True
         return False
 
-    def is_file_to_be_processed(self, file_object_key):
+    @staticmethod
+    def is_file_to_be_processed(file_object_key):
         if file_object_key.startswith('tobeprocessed'):
             return True
         return False
