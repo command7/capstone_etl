@@ -114,6 +114,13 @@ class S3Manager:
     def extract_hour_from_path(self, s3_path_to_parse):
         return int(s3_path_to_parse.split("/")[6])
 
+    def is_file_too_recent(self, file_path_to_check):
+        file_uploaded_hour = self.extract_hour_from_path(file_path_to_check)
+        if file_uploaded_hour == self.get_current_hour():
+            return True
+        return False
+
+
 if __name__ == "__main__":
     s3_manager = S3Manager()
     # s3_manager.list_all_contents()
