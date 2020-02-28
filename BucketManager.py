@@ -7,11 +7,15 @@ from datetime import datetime
 class BucketManager:
     def __init__(self, initiation_time):
         self.initiation_time = initiation_time
+        self.path_for_spark = None
         self.s3_resource = None
         self.bucket_name = None
         self.file_paths = list()
 
         BucketManager.parse_configurations()
+
+    def get_path_to_process(self):
+        return self.path_for_spark
 
     def get_s3_resource(self):
         return self.s3_resource
@@ -24,6 +28,9 @@ class BucketManager:
 
     def get_bucket_name(self):
         return self.bucket_name
+
+    def set_path_to_process(self, s3_path_to_process):
+        self.path_for_spark = s3_path_to_process
 
     def set_bucket_name(self, bucket_name):
         self.bucket_name = bucket_name
@@ -113,3 +120,7 @@ class BucketManager:
         if file_object_key.startswith('tobeprocessed'):
             return True
         return False
+
+    def list_all_files(self):
+        for each_file in self.get_file_paths():
+            print(each_file)
