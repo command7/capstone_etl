@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
-from TitlePrincipalsManager import TitlePrincipalsManager
-from TitleBasicsManager import TitleBasicsManager
-from TitleRatingsManager import TitleRatingsManager
-from NameBasicsManager import NameBasicsManager
+from Imdb_Etl.TitlePrincipalsManager import TitlePrincipalsManager
+from Imdb_Etl.TitleBasicsManager import TitleBasicsManager
+from Imdb_Etl.TitleRatingsManager import TitleRatingsManager
+from Imdb_Etl.NameBasicsManager import NameBasicsManager
 
 
 class S3Manager:
