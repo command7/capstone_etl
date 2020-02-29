@@ -53,10 +53,20 @@ class ETLManager:
         except Exception as e:
             print(e)
 
-    def load_basics_data(self):
-        self.basics_data = self.spark.read.parquet(self.get_basics_bucket_path())
-        print(self.basics_data.show(5))
+    def read_parquet_file(self, file_path_to_read):
+        return self.spark.read.parquet(file_path_to_read)
 
+    def load_basics_data(self):
+        self.basics_data = self.read_parquet_file(self.get_basics_bucket_path())
+
+    def load_principals_data(self):
+        self.principals_data = self.read_parquet_file(self.get_principals_bucket_path())
+
+    def load_ratings_data(self):
+        self.ratings_data = self.read_parquet_file(self.get_ratings_bucket_path())
+
+    def load_names_data(self):
+        self.names_data = self.read_parquet_file(self.get_names_bucket_path())
 
 if __name__ == "__main__":
     test = ETLManager()
