@@ -59,8 +59,8 @@ class BucketManager:
         conf_parser = configparser.ConfigParser()
         conf_parser.read_file(open("aws_config.cfg", "r"))
 
-        aws_access_key = conf_parser['Credentials']['AWS_ACCESS_KEY']
-        aws_secret_key = conf_parser['Credentials']['AWS_SECRET_KEY']
+        aws_access_key = conf_parser['S3Credentials']['AWS_ACCESS_KEY']
+        aws_secret_key = conf_parser['S3Credentials']['AWS_SECRET_KEY']
 
         os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key
         os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_key

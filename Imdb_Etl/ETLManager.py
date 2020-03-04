@@ -1,6 +1,7 @@
 from Imdb_Etl.S3Manager import S3Manager
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
+from pyspark.sql.window import Window
 import configparser
 
 
@@ -91,7 +92,7 @@ class ETLManager:
         self.load_names_data()
 
     def add_prefix_to_basics_data(self):
-        self.basics_data = self.basics_data.select([F.col(c).alias("tb_"+c) for c in self.basics_data.columns])
+        self.basics_data = self.basics_data.select([F.col(c).alias("tb_" + c) for c in self.basics_data.columns])
 
     def add_prefix_to_names_data(self):
         self.names_data = self.names_data.select([F.col(c).alias("nb_" + c) for c in self.names_data.columns])
@@ -100,7 +101,8 @@ class ETLManager:
         self.ratings_data = self.ratings_data.select([F.col(c).alias("tr_" + c) for c in self.ratings_data.columns])
 
     def add_prefix_to_principals_data(self):
-        self.principals_data = self.principals_data.select([F.col(c).alias("tp_" + c) for c in self.principals_data.columns])
+        self.principals_data = self.principals_data.select(
+            [F.col(c).alias("tp_" + c) for c in self.principals_data.columns])
 
     def add_prefixes(self):
         self.add_prefix_to_basics_data()
@@ -109,16 +111,16 @@ class ETLManager:
         self.add_prefix_to_ratings_data()
 
     def show_ratings_data(self):
-        self.get_ratings_data().show(5)
+        self.get_ratings_data().show()
 
     def show_basics_data(self):
-        self.get_basics_data().show(5)
+        self.get_basics_data().show()
 
     def show_principals_data(self):
-        self.get_principals_data().show(5)
+        self.get_principals_data().show()
 
     def show_names_data(self):
-        self.get_names_data().show(5)
+        self.get_names_data().show()
 
     def show_all_data(self):
         self.show_basics_data()
@@ -126,8 +128,33 @@ class ETLManager:
         self.show_ratings_data()
         self.show_names_data()
 
+    def test(self):
+        # Merging principals with title
+        # df = self.basics_data.join(self.principals_data,
+        #                            self.basics_data.tb_tconst == self.principals_data.tp_tconst,
+        #                            how="left")
+        # df = df.join(self.names_data,
+        #              df.tp_nconst == self.names_data.nb_nconst,
+        #              how="left")
+        # df = df.select(F.col("tb_tconst"),
+        #                F.col("tp_nconst").alias("member_id"),
+        #                F.col("nb_primaryname").alias("primary_name"),
+        #                F.col("tp_job").alias("job_title"),
+        #                F.col("tp_category").alias("job_category"),
+        #                F.col("nb_birthyear").alias("birth_year"),
+        #                F.col("nb_deathyear").alias("death_year"),
+        #                F.col("nb_primaryprofession").alias("primary_profession"))
+        # df.show()
+        w = Window.orderBy('tb_primaryTitle')
+        media_details_dim = self.basics_data.withColumn("media_details_sk", F.row_number().over(w) + 4) \
+            .select(F.col("media_details_sk"),
+                    F.col("tb_primaryTitle").alias("primary_title"),
+                    F.col("tb_originalTitle").alias("original_title"))
+                    # F.col("genre"))
+        media_details_dim.show()
+
 
 if __name__ == "__main__":
     test = ETLManager()
     test.show_all_data()
-    # test.test()
+    test.test()
