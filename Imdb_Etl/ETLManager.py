@@ -1,4 +1,5 @@
 from Imdb_Etl.S3Manager import S3Manager
+from Imdb_Etl.DynamoDbManager import DynamoDbManager
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
@@ -14,6 +15,7 @@ class ETLManager:
         self.names_data = None
 
         self.s3_manager = S3Manager()
+        self.dynamo_db_manager = DynamoDbManager()
         self.initialize_spark_session()
         self.load_all_data()
         self.add_prefixes()
