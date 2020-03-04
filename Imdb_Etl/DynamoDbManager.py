@@ -14,16 +14,29 @@ class DynamoDbManager:
 
     def get_sk_count(self, attribute_name):
         response = self.db_table.query(KeyConditionExpression=Key('stat_name').eq(attribute_name))
-        return response["Items"][0]["count"]
+        return response["Items"][0]["sk_value"]
+
+    def increment_sk_count(self, attribute_name):
+        response = self.db_table.update_item(Key={"stat_name": attribute_name},
+                                             UpdateExpression="set sk_value = sk_value + :val",
+                                             ExpressionAttributeValues={
+                                                 ':val': 1
+                                             })
 
     def get_media_details_starting_sk(self):
-        return self.get_sk_count("media_details_starting_sk")
+        current_value = self.get_sk_count("media_details_starting_sk")
+        self.increment_sk_count("media_details_starting_sk")
+        return current_value
 
     def get_media_type_starting_sk(self):
-        return self.get_sk_count("media_type_starting_sk")
+        current_value = self.get_sk_count("media_type_starting_sk")
+        self.increment_sk_count("media_type_starting_sk")
+        return current_value
 
     def get_series_details_starting_sk(self):
-        return self.get_sk_count("series_details_starting_sk")
+        current_value = self.get_sk_count("series_details_starting_sk")
+        self.increment_sk_count("series_details_starting_sk")
+        return current_value
 
     @staticmethod
     def get_db_credentials():
