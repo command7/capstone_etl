@@ -52,8 +52,8 @@ class ETLManager:
         conf_parser = configparser.ConfigParser()
         conf_parser.read_file(open("aws_config.cfg", "r"))
 
-        aws_access_key = conf_parser['Credentials']['AWS_ACCESS_KEY']
-        aws_secret_key = conf_parser['Credentials']['AWS_SECRET_KEY']
+        aws_access_key = conf_parser['S3Credentials']['AWS_ACCESS_KEY']
+        aws_secret_key = conf_parser['S3Credentials']['AWS_SECRET_KEY']
 
         return aws_access_key, aws_secret_key
 
