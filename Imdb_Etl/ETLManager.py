@@ -130,25 +130,10 @@ class ETLManager:
         self.show_ratings_data()
         self.show_names_data()
 
-    def test(self):
-        # Merging principals with title
-        # df = self.basics_data.join(self.principals_data,
-        #                            self.basics_data.tb_tconst == self.principals_data.tp_tconst,
-        #                            how="left")
-        # df = df.join(self.names_data,
-        #              df.tp_nconst == self.names_data.nb_nconst,
-        #              how="left")
-        # df = df.select(F.col("tb_tconst"),
-        #                F.col("tp_nconst").alias("member_id"),
-        #                F.col("nb_primaryname").alias("primary_name"),
-        #                F.col("tp_job").alias("job_title"),
-        #                F.col("tp_category").alias("job_category"),
-        #                F.col("nb_birthyear").alias("birth_year"),
-        #                F.col("nb_deathyear").alias("death_year"),
-        #                F.col("nb_primaryprofession").alias("primary_profession"))
-        # df.show()
+    def transform_media_details_dim(self):
+        initial_sk = self.dynamo_db_manager.get_media_details_starting_sk()
         w = Window.orderBy('tb_primaryTitle')
-        media_details_dim = self.basics_data.withColumn("media_details_sk", F.row_number().over(w) + 4) \
+        media_details_dim = self.basics_data.withColumn("media_details_sk", F.row_number().over(w) + initial_sk) \
             .select(F.col("media_details_sk"),
                     F.col("tb_primaryTitle").alias("primary_title"),
                     F.col("tb_originalTitle").alias("original_title"))
@@ -156,7 +141,9 @@ class ETLManager:
         media_details_dim.show()
 
 
+
+
 if __name__ == "__main__":
     test = ETLManager()
     test.show_all_data()
-    test.test()
+    test.transform_media_details_dim()
