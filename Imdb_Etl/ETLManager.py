@@ -139,11 +139,4 @@ class ETLManager:
                     F.col("tb_originalTitle").alias("original_title"))
                     # F.col("genre"))
         media_details_dim.show()
-
-
-
-
-if __name__ == "__main__":
-    test = ETLManager()
-    test.show_all_data()
-    test.transform_media_details_dim()
+        media_details_dim.write.parquet("s3a://imdbtitlebasics/testing/test.parquet", mode="overwrite")
