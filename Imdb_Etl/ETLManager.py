@@ -62,11 +62,14 @@ class ETLManager:
         self.spark.sparkContext._jsc.hadoopConfiguration().set("fs.s3a.access.key", aws_access_key)
         self.spark.sparkContext._jsc.hadoopConfiguration().set("fs.s3a.secret.key", aws_secret_key)
 
+    def stop_spark_cluster(self):
+        self.spark.stop()
+
     def initialize_spark_session(self):
         try:
             self.spark = SparkSession.builder.config("spark.jars.packages",
                                                      "org.apache.hadoop:hadoop-aws:2.7.6") \
-                .appName("test application").getOrCreate()
+                .appName("test application").master("yarn").getOrCreate()
 
             self.set_aws_credentials()
         except Exception as e:
@@ -140,3 +143,5 @@ class ETLManager:
                     # F.col("genre"))
         media_details_dim.show()
         media_details_dim.write.parquet("s3a://imdbtitlebasics/testing/test.parquet", mode="overwrite")
+
+
