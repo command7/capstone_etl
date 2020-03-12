@@ -25,5 +25,5 @@ media_details_dim.show()
 # media_details_dim.write.parquet("s3a://imdbtitlebasics/testing/test.parquet", mode="overwrite")
 
 """
-aws emr add-steps --cluster-id j-1WZGCEK8TVGVX --steps Name=imdbetlapp,Jar=command-runner.jar,Args=[spark-submit,--deploy-mode,cluster,--master,yarn,--conf,spark.yarn.submit.waitAppCompletion=true,s3://imdbetlapp/complete_etl.py,s3://imdbetlapp/aws_config.cfg],ActionOnFailure=CONTINUE
+aws emr add-steps --cluster-id j-1WZGCEK8TVGVX --steps Name=imdbetlapp,Jar=command-runner.jar,Args=[spark-submit,--deploy-mode,cluster,--master,yarn,--conf,spark.yarn.submit.waitAppCompletion=true,--py-files,s3://imdbetlapp/Imdb_Etl.zip,--files,s3://imdbetlapp/Imdb_Etl/aws_config.cfg,s3://imdbetlapp/run_etl.py],ActionOnFailure=CONTINUE
 """
