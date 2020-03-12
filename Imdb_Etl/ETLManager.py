@@ -69,7 +69,7 @@ class ETLManager:
         try:
             self.spark = SparkSession.builder.config("spark.jars.packages",
                                                      "org.apache.hadoop:hadoop-aws:2.7.6") \
-                .appName("test application").master("yarn").getOrCreate()
+                .appName("test application").getOrCreate()
 
             self.set_aws_credentials()
         except Exception as e:
@@ -139,8 +139,8 @@ class ETLManager:
         media_details_dim = self.basics_data.withColumn("media_details_sk", F.row_number().over(w) + initial_sk) \
             .select(F.col("media_details_sk"),
                     F.col("tb_primaryTitle").alias("primary_title"),
-                    F.col("tb_originalTitle").alias("original_title"),
-                    F.col("genre"))
+                    F.col("tb_originalTitle").alias("original_title"))
+                    # F.col("genre"))
         media_details_dim.show()
         media_details_dim.write.parquet("s3a://imdbtitlebasics/testing/test.parquet", mode="overwrite")
 
