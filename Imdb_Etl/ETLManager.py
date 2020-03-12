@@ -139,9 +139,19 @@ class ETLManager:
         media_details_dim = self.basics_data.withColumn("media_details_sk", F.row_number().over(w) + initial_sk) \
             .select(F.col("media_details_sk"),
                     F.col("tb_primaryTitle").alias("primary_title"),
-                    F.col("tb_originalTitle").alias("original_title"))
-                    # F.col("genre"))
+                    F.col("tb_originalTitle").alias("original_title"),
+                    F.col("tb_genre").alias("genre"))
         media_details_dim.show()
-        media_details_dim.write.parquet("s3a://imdbtitlebasics/testing/test.parquet", mode="overwrite")
+        return media_details_dim
+
+    def transform_media_type_dim(self):
+        initial_sk = self.dynamo_db_manager.get_media_type_starting_sk()
+        w = Window.orderBy('tb_titleType')
+        media_type_dim = self.basics_data.withColumn("media_type_sk", F.row_number().over(w) + initial_sk) \
+            .select(F.col("media_type_sk"),
+                    F.col("tb_titleType").alias("media_type"))
+        media_type_dim.show()
+        return media_type_dim
+
 
 
