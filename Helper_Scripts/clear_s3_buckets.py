@@ -2,7 +2,7 @@ import configparser
 import boto3
 
 conf_parser = configparser.ConfigParser()
-conf_parser.read_file(open("../aws_config.cfg", "r"))
+conf_parser.read_file(open("../Imdb_Etl/aws_config.cfg", "r"))
 
 s3_access_key = conf_parser['S3Credentials']['AWS_ACCESS_KEY']
 s3_secret_key = conf_parser['S3Credentials']['AWS_SECRET_KEY']
