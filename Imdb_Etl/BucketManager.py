@@ -1,5 +1,4 @@
 import configparser
-import os
 import boto3
 from datetime import datetime
 
@@ -11,8 +10,6 @@ class BucketManager:
         self.s3_resource = None
         self.bucket_name = None
         self.file_paths = list()
-
-        BucketManager.parse_configurations()
 
     def get_path_to_process(self):
         return self.path_for_spark
@@ -39,7 +36,11 @@ class BucketManager:
         self.file_paths = bucket_files_list
 
     def set_s3_resource(self):
-        self.s3_resource = boto3.resource('s3')
+        s3_access_key, s3_secret_key = self.parse_configurations()
+        self.s3_resource = boto3.resource('s3',
+                                          region_name='us-east-1',
+                                          aws_access_key_id=s3_access_key,
+                                          aws_secret_access_key=s3_secret_key)
 
     def add_file_path(self, file_path_to_add):
         self.file_paths.append(file_path_to_add)
@@ -59,11 +60,10 @@ class BucketManager:
         conf_parser = configparser.ConfigParser()
         conf_parser.read_file(open("aws_config.cfg", "r"))
 
-        aws_access_key = conf_parser['S3Credentials']['AWS_ACCESS_KEY']
-        aws_secret_key = conf_parser['S3Credentials']['AWS_SECRET_KEY']
+        access_key = conf_parser['S3Credentials']['AWS_ACCESS_KEY']
+        secret_key = conf_parser['S3Credentials']['AWS_SECRET_KEY']
 
-        os.environ["AWS_ACCESS_KEY_ID"] = aws_access_key
-        os.environ["AWS_SECRET_ACCESS_KEY"] = aws_secret_key
+        return access_key, secret_key
 
     def parse_bucket(self):
         s3_bucket = self.s3_resource.Bucket(self.get_bucket_name())

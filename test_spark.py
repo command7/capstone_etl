@@ -22,8 +22,8 @@ media_details_dim = basics_data.withColumn("media_details_sk", F.row_number().ov
                     F.col("tb_originalTitle").alias("original_title"))
                     # F.col("genre"))
 media_details_dim.show()
-media_details_dim.write.parquet("s3a://imdbtitlebasics/testing/test.parquet", mode="overwrite")
+# media_details_dim.write.parquet("s3a://imdbtitlebasics/testing/test.parquet", mode="overwrite")
 
 """
-aws emr add-steps --cluster-id j-1YE46DLX58DHN --steps Name=imdbetlapp,Jar=command-runner.jar,Args=[spark-submit,--deploy-mode,cluster,--master,yarn,--conf,spark.yarn.submit.waitAppCompletion=true,s3://imdbetlapp/spark_test.py],ActionOnFailure=CONTINUE
+aws emr add-steps --cluster-id j-1WZGCEK8TVGVX --steps Name=imdbetlapp,Jar=command-runner.jar,Args=[spark-submit,--deploy-mode,cluster,--master,yarn,--conf,spark.yarn.submit.waitAppCompletion=true,s3://imdbetlapp/complete_etl.py,s3://imdbetlapp/aws_config.cfg],ActionOnFailure=CONTINUE
 """
