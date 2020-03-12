@@ -69,7 +69,7 @@ class BucketManager:
         s3_bucket = self.s3_resource.Bucket(self.get_bucket_name())
         for each_file_path in s3_bucket.objects.all():
             formatted_file_path = self.construct_complete_s3_address(each_file_path.key)
-            file_upload_time = datetime.fromisoformat(str(each_file_path.last_modified))
+            file_upload_time = each_file_path.last_modified
             if BucketManager.is_file_to_be_processed(each_file_path.key) and not self.is_file_too_recent(file_upload_time):
                 self.add_file_path(formatted_file_path)
 
