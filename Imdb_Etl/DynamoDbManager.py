@@ -74,6 +74,16 @@ class DynamoDbManager:
                                              ExpressionAttributeValues={
                                                  ':val': 0
                                              })
+        response = self.db_table.update_item(Key={"stat_name": "media_member_starting_sk"},
+                                             UpdateExpression="set sk_value = :val",
+                                             ExpressionAttributeValues={
+                                                 ':val': 0
+                                             })
+        response = self.db_table.update_item(Key={"stat_name": "member_bridge_starting_sk"},
+                                             UpdateExpression="set sk_value = :val",
+                                             ExpressionAttributeValues={
+                                                 ':val': 0
+                                             })
 
     @staticmethod
     def get_db_credentials():
@@ -88,7 +98,4 @@ class DynamoDbManager:
 
 if __name__ == "__main__":
     test = DynamoDbManager()
-    print(test.get_media_details_starting_sk())
-    print(test.get_media_type_starting_sk())
-    print(test.get_series_details_starting_sk())
     test.reset_sk_counts()
