@@ -16,32 +16,47 @@ class DynamoDbManager:
         response = self.db_table.query(KeyConditionExpression=Key('stat_name').eq(attribute_name))
         return response["Items"][0]["sk_value"]
 
-    def increment_sk_count(self, attribute_name):
+    def increment_sk_count(self, attribute_name, value_to_change):
         response = self.db_table.update_item(Key={"stat_name": attribute_name},
-                                             UpdateExpression="set sk_value = sk_value + :val",
+                                             UpdateExpression="set sk_value = :val",
                                              ExpressionAttributeValues={
-                                                 ':val': 1
+                                                 ':val': value_to_change
                                              })
 
     def get_media_details_starting_sk(self):
-        current_value = self.get_sk_count("media_details_starting_sk")
-        self.increment_sk_count("media_details_starting_sk")
-        return current_value
+        return self.get_sk_count("media_details_starting_sk")
 
     def get_media_member_starting_sk(self):
-        current_value = self.get_sk_count("media_member_starting_sk")
-        self.increment_sk_count("media_member_starting_sk")
-        return current_value
+        return self.get_sk_count("media_member_starting_sk")
+
+    def get_member_bridge_starting_sk(self):
+        return self.get_sk_count("member_bridge_starting_sk")
 
     def get_media_type_starting_sk(self):
-        current_value = self.get_sk_count("media_type_starting_sk")
-        self.increment_sk_count("media_type_starting_sk")
-        return current_value
+        return self.get_sk_count("media_type_starting_sk")
 
     def get_series_details_starting_sk(self):
-        current_value = self.get_sk_count("series_details_starting_sk")
-        self.increment_sk_count("series_details_starting_sk")
-        return current_value
+        return self.get_sk_count("series_details_starting_sk")
+
+    def update_media_details_starting_sk(self, value_to_change):
+        self.increment_sk_count("media_details_starting_sk",
+                                value_to_change)
+
+    def update_media_member_starting_sk(self, value_to_change):
+        self.increment_sk_count("media_member_starting_sk",
+                                value_to_change)
+
+    def update_member_bridge_starting_sk(self, value_to_change):
+        self.increment_sk_count("member_bridge_starting_sk",
+                                value_to_change)
+
+    def update_media_type_starting_sk(self, value_to_change):
+        self.increment_sk_count("media_type_starting_sk",
+                                value_to_change)
+
+    def update_series_details_starting_sk(self, value_to_change):
+        self.increment_sk_count("series_details_starting_sk",
+                                value_to_change)
 
     def reset_sk_counts(self):
         response = self.db_table.update_item(Key={"stat_name": "media_details_starting_sk"},
@@ -63,7 +78,7 @@ class DynamoDbManager:
     @staticmethod
     def get_db_credentials():
         conf_parser = configparser.ConfigParser()
-        conf_parser.read_file(open("aws_config.cfg", "r"))
+        conf_parser.read_file(open("Imdb_Etl/aws_config.cfg", "r"))
 
         db_access_key = conf_parser['DynamoDbCredentials']['AWS_ACCESS_KEY']
         db_secret_key = conf_parser['DynamoDbCredentials']['AWS_SECRET_KEY']
