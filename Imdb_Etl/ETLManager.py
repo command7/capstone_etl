@@ -143,6 +143,10 @@ class ETLManager:
                     F.col("tb_titleType").alias("media_type"),
                     F.col("tb_genre").alias("genre"))
         media_details_dim.show()
+        last_media_details_sk = media_details_dim \
+            .sort(F.desc("media_details_sk")) \
+            .first().media_details_sk
+        self.dynamo_db_manager.update_media_details_starting_sk(last_media_details_sk)
         return media_details_dim
 
 
