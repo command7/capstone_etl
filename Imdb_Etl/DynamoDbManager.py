@@ -28,6 +28,11 @@ class DynamoDbManager:
         self.increment_sk_count("media_details_starting_sk")
         return current_value
 
+    def get_member_dim_starting_sk(self):
+        current_value = self.get_sk_count("member_dim_starting_sk")
+        self.increment_sk_count("member_dim_starting_sk")
+        return current_value
+
     def get_media_type_starting_sk(self):
         current_value = self.get_sk_count("media_type_starting_sk")
         self.increment_sk_count("media_type_starting_sk")
