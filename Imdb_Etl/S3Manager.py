@@ -3,6 +3,7 @@ from Imdb_Etl.TitlePrincipalsManager import TitlePrincipalsManager
 from Imdb_Etl.TitleBasicsManager import TitleBasicsManager
 from Imdb_Etl.TitleRatingsManager import TitleRatingsManager
 from Imdb_Etl.NameBasicsManager import NameBasicsManager
+from Imdb_Etl.TitleEpisodesManager import TitleEpisodesManager
 
 
 class S3Manager:
@@ -13,6 +14,7 @@ class S3Manager:
         self.title_principals_manager = TitlePrincipalsManager(self.initiation_time)
         self.title_ratings_manager = TitleRatingsManager(self.initiation_time)
         self.name_basics_manager = NameBasicsManager(self.initiation_time)
+        self.title_episodes_manager = TitleEpisodesManager(self.initiation_time)
 
     def get_title_basics_manager(self):
         return self.title_basics_manager
@@ -26,6 +28,9 @@ class S3Manager:
     def get_name_basics_manager(self):
         return self.name_basics_manager
 
+    def get_title_episodes_manager(self):
+        return self.get_title_episodes_manager()
+
     def list_all_basic_files(self):
         self.get_title_basics_manager().list_all_files()
 
@@ -37,6 +42,9 @@ class S3Manager:
 
     def list_all_name_files(self):
         self.get_name_basics_manager().list_all_files()
+
+    def list_all_episode_files(self):
+        self.get_title_episodes_manager().list_all_files()
 
     def list_all_files(self):
         print("Title Basics\n")
@@ -51,6 +59,9 @@ class S3Manager:
         print("\nName Basics\n")
         self.list_all_name_files()
 
+        print("\nTitle Episodes\n")
+        self.list_all_episode_files()
+
     def get_processing_path_for_basics(self):
         return self.get_title_basics_manager().get_path_to_process()
 
@@ -62,6 +73,9 @@ class S3Manager:
 
     def get_processing_path_for_names(self):
         return self.get_name_basics_manager().get_path_to_process()
+
+    def get_processing_path_for_episodes(self):
+        return self.get_title_episodes_manager().get_path_to_process()
 
 if __name__ == "__main__":
     s3_manager = S3Manager()
