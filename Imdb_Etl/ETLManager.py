@@ -150,6 +150,7 @@ class ETLManager:
         w = Window.orderBy('tb_primaryTitle')
         media_details_dim = self.basics_data.withColumn("media_details_sk", F.row_number().over(w) + initial_sk) \
             .select(F.col("media_details_sk"),
+                    F.col("tb_tconst").alias("media_id"),
                     F.col("tb_primaryTitle").alias("primary_title"),
                     F.col("tb_originalTitle").alias("original_title"),
                     F.col("tb_titleType").alias("media_type"),
