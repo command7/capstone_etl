@@ -38,6 +38,12 @@ class DynamoDbManager:
     def get_series_details_starting_sk(self):
         return self.get_sk_count("series_details_starting_sk")
 
+    def get_starting_year_starting_sk(self):
+        return self.get_sk_count("starting_date_sk")
+
+    def get_ending_year_starting_sk(self):
+        return self.get_sk_count("ending_date_sk")
+
     def update_media_details_starting_sk(self, value_to_change):
         self.increment_sk_count("media_details_starting_sk",
                                 value_to_change)
@@ -56,6 +62,14 @@ class DynamoDbManager:
 
     def update_series_details_starting_sk(self, value_to_change):
         self.increment_sk_count("series_details_starting_sk",
+                                value_to_change)
+
+    def update_starting_year_starting_sk(self, value_to_change):
+        self.increment_sk_count("starting_date_sk",
+                                value_to_change)
+
+    def update_ending_year_starting_sk(self, value_to_change):
+        self.increment_sk_count("ending_date_sk",
                                 value_to_change)
 
     def reset_sk_counts(self):
@@ -84,11 +98,21 @@ class DynamoDbManager:
                                              ExpressionAttributeValues={
                                                  ':val': 0
                                              })
+        response = self.db_table.update_item(Key={"stat_name": "starting_date_sk"},
+                                            UpdateExpression="set sk_value = :val",
+                                            ExpressionAttributeValues={
+                                                ':val': 0
+                                            })
+        response = self.db_table.update_item(Key={"stat_name": "ending_date_sk"},
+                                            UpdateExpression="set sk_value = :val",
+                                            ExpressionAttributeValues={
+                                                ':val': 0
+                                            })
 
     @staticmethod
     def get_db_credentials():
         conf_parser = configparser.ConfigParser()
-        conf_parser.read_file(open("Imdb_Etl/aws_config.cfg", "r"))
+        conf_parser.read_file(open("aws_config.cfg", "r"))
 
         db_access_key = conf_parser['DynamoDbCredentials']['AWS_ACCESS_KEY']
         db_secret_key = conf_parser['DynamoDbCredentials']['AWS_SECRET_KEY']
