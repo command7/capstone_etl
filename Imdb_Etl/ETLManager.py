@@ -234,5 +234,18 @@ class ETLManager:
         self.dynamo_db_manager.update_series_details_starting_sk(last_series_details_sk)
         series_details_dim.write.parquet("s3://imdbtitleepisodes/output",mode="overwrite")
 
-
         return series_details_dim
+
+    def transform_starting_date_dim(self):
+        date_window = Window.orderBy("tb_primarytitle")
+        starting_date_dim = self.basics_data.withColumn("starting_date_sk", F.row_number().over(date_window) + 1) \
+            .select(F.col("starting_date_sk"),
+                    F.col("tb_startyear").alias("starting_year"))
+        return starting_date_dim
+
+    def transform_ending_date_dim(self):
+        date_window = Window.orderBy("tb_primarytitle")
+        ending_date_dim = self.basics_data.withColumn("ending_date_sk", F.row_number().over(date_window) + 1) \
+            .select(F.col("ending_date_sk"),
+                    F.col("tb_endyear").alias("ending_year"))
+        return ending_date_dim
