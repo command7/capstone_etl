@@ -13,6 +13,7 @@ class ETLManager:
         self.principals_data = None
         self.ratings_data = None
         self.names_data = None
+        self.episodes_data = None
 
         self.s3_manager = S3Manager()
         self.dynamo_db_manager = DynamoDbManager()
@@ -34,6 +35,9 @@ class ETLManager:
 
     def get_names_bucket_path(self):
         return self.s3_manager.get_processing_path_for_names()
+
+    def get_episodes_bucket_path(self):
+        return self.s3_manager.get_processing_path_for_episodes()
 
     def get_ratings_data(self):
         return self.ratings_data
@@ -90,11 +94,15 @@ class ETLManager:
     def load_names_data(self):
         self.names_data = self.read_parquet_file(self.get_names_bucket_path())
 
+    def load_episodes_data(self):
+        self.episodes_data = self.read_parquet_file(self.get_episodes_bucket_path())
+
     def load_all_data(self):
         self.load_basics_data()
         self.load_principals_data()
         self.load_ratings_data()
         self.load_names_data()
+        self.load_episodes_data()
 
     def add_prefix_to_basics_data(self):
         self.basics_data = self.basics_data.select([F.col(c).alias("tb_" + c) for c in self.basics_data.columns])
@@ -109,11 +117,15 @@ class ETLManager:
         self.principals_data = self.principals_data.select(
             [F.col(c).alias("tp_" + c) for c in self.principals_data.columns])
 
+    def add_prefix_to_episodes_data(self):
+        self.episodes_data = self.episodes_data.select([F.col(c).alias("te_" + c) for c in self.episodes_data.columns])
+
     def add_prefixes(self):
         self.add_prefix_to_basics_data()
         self.add_prefix_to_names_data()
         self.add_prefix_to_principals_data()
         self.add_prefix_to_ratings_data()
+        self.add_prefix_to_episodes_data()
 
     def show_ratings_data(self):
         self.get_ratings_data().show()
@@ -203,3 +215,24 @@ class ETLManager:
         media_member_dim.show()
 
         return media_member_dim, media_member_bridge
+
+    def transform_series_details_dim(self):
+        initial_sk = self.dynamo_db_manager.get_series_details_starting_sk()
+        series_window = Window.orderBy('te_tconst')
+        series_details_dim = self.episodes_data.withColumn("series_details_sk",
+                                                           F.row_number().over(series_window) + initial_sk) \
+            .select(F.col("series_details_sk"),
+                    F.col("te_tconst").alias("series_episode_id"),
+                    F.col("te_parenttconst").alias("series_parent_id"),
+                    F.col("te_seasonnumber").alias("season_number"),
+                    F.col("te_episodenumber").alias("episode_number"))
+
+        series_details_dim.show()
+        last_series_details_sk = series_details_dim \
+            .sort(F.desc("series_details_sk")) \
+            .first().series_details_sk
+        self.dynamo_db_manager.update_series_details_starting_sk(last_series_details_sk)
+        series_details_dim.write.parquet("s3://imdbtitleepisodes/output",mode="overwrite")
+
+
+        return series_details_dim
