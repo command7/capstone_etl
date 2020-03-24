@@ -29,7 +29,7 @@ class S3Manager:
         return self.name_basics_manager
 
     def get_title_episodes_manager(self):
-        return self.get_title_episodes_manager()
+        return self.title_episodes_manager
 
     def list_all_basic_files(self):
         self.get_title_basics_manager().list_all_files()
