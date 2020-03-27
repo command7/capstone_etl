@@ -199,16 +199,16 @@ class ETLManager:
                     F.col("media_member_key"))
 
         bridge_window = Window.orderBy(media_member_bridge.media_member_group_key)
-        media_member_bridge = media_member_bridge\
-            .withColumn("rank", F.dense_rank().over(bridge_window) + member_bridge_initial_sk)\
+        media_member_bridge = media_member_bridge \
+            .withColumn("rank", F.dense_rank().over(bridge_window) + member_bridge_initial_sk) \
             .select(F.col("rank").alias("media_member_group_key"),
                     F.col("media_member_key"))
 
-        last_member_bridge_starting_sk = media_member_bridge\
-            .sort(F.desc("media_member_group_key"))\
+        last_member_bridge_starting_sk = media_member_bridge \
+            .sort(F.desc("media_member_group_key")) \
             .first().media_member_group_key
-        last_media_member_starting_sk = media_member_dim\
-            .sort(F.desc("media_member_key"))\
+        last_media_member_starting_sk = media_member_dim \
+            .sort(F.desc("media_member_key")) \
             .first().media_member_key
         self.dynamo_db_manager.update_media_member_starting_sk(last_media_member_starting_sk)
         self.dynamo_db_manager.update_member_bridge_starting_sk(last_member_bridge_starting_sk)
@@ -251,3 +251,60 @@ class ETLManager:
             .select(F.col("ending_date_sk"),
                     F.col("tb_endyear").alias("ending_year"))
         return ending_date_dim
+
+    def transform_fact_table(self):
+        media_details_dim = self.transform_media_details_dim()
+        starting_date_dim = self.transform_starting_date_dim()
+        ending_date_dim = self.transform_ending_date_dim()
+        series_details_dim = self.transform_series_details_dim()
+        media_member_dim, media_member_bridge = self.transform_bridge_dimensions()
+
+        bridge_joined = media_member_bridge.join(media_member_dim,
+                                                 media_member_bridge.media_member_key == media_member_dim.media_member_key,
+                                                 how="left")
+        bridge_join_condition = [self.principals_data.tp_tconst == bridge_joined.member_tconst,
+                                 self.principals_data.tp_nconst == bridge_joined.member_id]
+        fact_dim = self.basics_data.withColumn("runtime_hours", self.basics_data.tb_runtimeminutes / 60) \
+            .withColumn("runtime_seconds", self.basics_data.tb_runtimeminutes * 60) \
+            .join(self.ratings_data,
+                  self.basics_data.tb_tconst == self.ratings_data.tr_tconst,
+                  how="left") \
+            .join(self.principals_data,
+                  self.basics_data.tb_tconst == self.principals_data.tp_tconst,
+                  how="left") \
+            .join(media_details_dim,
+                  self.basics_data.tb_tconst == media_details_dim.media_id,
+                  how="left") \
+            .join(series_details_dim,
+                  self.basics_data.tb_tconst == series_details_dim.series_episode_id,
+                  how="left") \
+            .join(starting_date_dim,
+                  self.basics_data.tb_startyear == starting_date_dim.starting_year,
+                  how="left") \
+            .join(ending_date_dim,
+                  self.basics_data.tb_endyear == ending_date_dim.ending_year,
+                  how="left") \
+            .join(bridge_joined,
+                  bridge_join_condition,
+                  how="left")
+
+        fact_dim = fact_dim.select(F.col("series_details_sk"),
+                                   F.col("starting_date_sk"),
+                                   F.col("ending_date_sk"),
+                                   F.col("media_details_sk"),
+                                   F.col("media_member_group_key"),
+                                   F.col("tb_isadult").alias("is_adult_picture"),
+                                   F.col("tb_runtimeminutes").alias("runtime_minutes"),
+                                   F.col("runtime_hours"),
+                                   F.col("runtime_seconds"),
+                                   F.col("tb_tconst")) \
+            .distinct() \
+            .join(self.ratings_data,
+                  self.ratings_data.tr_tconst == fact_dim.tb_tconst,
+                  how="left") \
+            .drop("tr_tconst") \
+            .drop("tb_tconst") \
+            .withColumnRenamed("tr_averagerating", "averate_rating") \
+            .withColumnRenamed("tr_numvotes", "num_votes")
+
+        return fact_dim
