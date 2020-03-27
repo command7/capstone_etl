@@ -177,6 +177,7 @@ class ETLManager:
         media_member_dim = joined_df.withColumn("media_member_key",
                                                 F.row_number().over(member_window) + member_dim_initial_sk) \
             .select(F.col("media_member_key"),
+                    F.col("tp_tconst").alias("media_tconst"),
                     F.col("tp_nconst").alias("member_id"),
                     F.col("nb_primaryname").alias("primary_name"),
                     F.col("tp_job").alias("job_title"),
@@ -233,7 +234,7 @@ class ETLManager:
             .sort(F.desc("series_details_sk")) \
             .first().series_details_sk
         self.dynamo_db_manager.update_series_details_starting_sk(last_series_details_sk)
-        series_details_dim.write.parquet("s3://imdbtitleepisodes/output",mode="overwrite")
+        series_details_dim.write.parquet("s3://imdbtitleepisodes/output", mode="overwrite")
 
         return series_details_dim
 
