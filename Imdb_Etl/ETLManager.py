@@ -234,7 +234,6 @@ class ETLManager:
             .sort(F.desc("series_details_sk")) \
             .first().series_details_sk
         self.dynamo_db_manager.update_series_details_starting_sk(last_series_details_sk)
-        series_details_dim.write.parquet("s3://imdbtitleepisodes/output", mode="overwrite")
 
         return series_details_dim
 
@@ -356,3 +355,4 @@ class ETLManager:
                                                series_details_dim,
                                                media_member_dim,
                                                media_member_bridge)
+
