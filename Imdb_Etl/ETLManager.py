@@ -321,6 +321,9 @@ class ETLManager:
             .withColumn("starting_date_sk", F.when(F.isnull(fact_dim.starting_date_sk),
                                                    1) \
                         .otherwise(fact_dim.starting_date_sk)) \
+            .withColumn("series_details_sk", F.when(F.isnull(fact_dim.series_details_sk),
+                                                    1) \
+                        .otherwise(fact_dim.series_details_sk)) \
             .select(F.col("series_details_sk"),
                     F.col("starting_date_sk"),
                     F.col("ending_date_sk"),
