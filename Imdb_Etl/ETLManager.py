@@ -273,7 +273,7 @@ class ETLManager:
 
         return ending_date_dim
 
-    def transform_fact_table(self):
+    def transform_dimensions_and_fact_table(self):
         media_details_dim = self.transform_media_details_dim()
         starting_date_dim = self.transform_starting_date_dim()
         ending_date_dim = self.transform_ending_date_dim()
