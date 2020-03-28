@@ -349,10 +349,18 @@ class ETLManager:
         ending_date_dim = self.transform_ending_date_dim()
         series_details_dim = self.transform_series_details_dim()
         media_member_dim, media_member_bridge = self.transform_bridge_dimensions()
-        fact_table = self.transform_fact_table(media_details_dim,
+        media_fact = self.transform_fact_table(media_details_dim,
                                                starting_date_dim,
                                                ending_date_dim,
                                                series_details_dim,
                                                media_member_dim,
                                                media_member_bridge)
+
+        media_details_dim.write.parquet("s3://imdbetloutput/media_details_dim")
+        starting_date_dim.write.parquet("s3://imdbetloutput/starting_date_dim")
+        ending_date_dim.write.parquet("s3://imdbetloutput/ending_date_dim")
+        series_details_dim.write.parquet("s3://imdbetloutput/seriesdetailsdim")
+        media_member_dim.write.parquet("s3://imdbetloutput/media_member_dim")
+        media_member_bridge.write.parquet("s3://imdbetloutput/media_member_bridge")
+        media_fact.write.parquet("s3://imdbetloutput/media_fact")
 
