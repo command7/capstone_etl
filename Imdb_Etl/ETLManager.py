@@ -309,16 +309,22 @@ class ETLManager:
                   bridge_join_condition,
                   how="left")
 
-        fact_dim = fact_dim.select(F.col("series_details_sk"),
-                                   F.col("starting_date_sk"),
-                                   F.col("ending_date_sk"),
-                                   F.col("media_details_sk"),
-                                   F.col("media_member_group_key"),
-                                   F.col("tb_isadult").alias("is_adult_picture"),
-                                   F.col("tb_runtimeminutes").alias("runtime_minutes"),
-                                   F.col("runtime_hours"),
-                                   F.col("runtime_seconds"),
-                                   F.col("tb_tconst")) \
+        fact_dim = fact_dim.withColumn("ending_date_sk", F.when(F.isnull(fact_dim.ending_date_sk),
+                                                                1) \
+                                       .otherwise(fact_dim.ending_date_sk)) \
+            .withColumn("starting_date_sk", F.when(F.isnull(fact_dim.starting_date_sk),
+                                                   1) \
+                        .otherwise(fact_dim.starting_date_sk)) \
+            .select(F.col("series_details_sk"),
+                    F.col("starting_date_sk"),
+                    F.col("ending_date_sk"),
+                    F.col("media_details_sk"),
+                    F.col("media_member_group_key"),
+                    F.col("tb_isadult").alias("is_adult_picture"),
+                    F.col("tb_runtimeminutes").alias("runtime_minutes"),
+                    F.col("runtime_hours"),
+                    F.col("runtime_seconds"),
+                    F.col("tb_tconst")) \
             .distinct() \
             .join(self.ratings_data,
                   self.ratings_data.tr_tconst == fact_dim.tb_tconst,
