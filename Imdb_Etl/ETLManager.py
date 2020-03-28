@@ -247,7 +247,7 @@ class ETLManager:
         starting_date_dim = starting_date_dim.filter(starting_date_dim.starting_year.isNotNull())
         date_window_ = Window.orderBy('starting_date_sk')
         starting_date_dim = starting_date_dim.withColumn("starting_date_sk",
-                                                     F.row_number().over(date_window_) + initial_sk)
+                                                         F.row_number().over(date_window_) + initial_sk)
 
         last_starting_date_sk = starting_date_dim \
             .sort(F.desc("starting_date_sk")) \
@@ -273,16 +273,23 @@ class ETLManager:
 
         return ending_date_dim
 
-    def transform_dimensions_and_fact_table(self):
-        media_details_dim = self.transform_media_details_dim()
-        starting_date_dim = self.transform_starting_date_dim()
-        ending_date_dim = self.transform_ending_date_dim()
-        series_details_dim = self.transform_series_details_dim()
-        media_member_dim, media_member_bridge = self.transform_bridge_dimensions()
+    @staticmethod
+    def left_inner_join_two_dataframes(left_data_frame,
+                                       right_date_frame):
+        return left_data_frame.join(right_date_frame,
+                                    left_data_frame.media_member_key ==
+                                    right_date_frame.media_member_key,
+                                    how="left")
 
-        bridge_joined = media_member_bridge.join(media_member_dim,
-                                                 media_member_bridge.media_member_key == media_member_dim.media_member_key,
-                                                 how="left")
+    def transform_fact_table(self,
+                             transformed_media_details_dim,
+                             transformed_starting_date_dim,
+                             transformed_ending_date_dim,
+                             transformed_series_details_dim,
+                             transformed_media_member_dim,
+                             transformed_media_member_bridge):
+        bridge_joined = self.left_inner_join_two_dataframes(transformed_media_member_bridge,
+                                                            transformed_media_member_dim)
         bridge_join_condition = [self.principals_data.tp_tconst == bridge_joined.member_tconst,
                                  self.principals_data.tp_nconst == bridge_joined.member_id]
         fact_dim = self.basics_data.withColumn("runtime_hours", self.basics_data.tb_runtimeminutes / 60) \
@@ -293,17 +300,17 @@ class ETLManager:
             .join(self.principals_data,
                   self.basics_data.tb_tconst == self.principals_data.tp_tconst,
                   how="left") \
-            .join(media_details_dim,
-                  self.basics_data.tb_tconst == media_details_dim.media_id,
+            .join(transformed_media_details_dim,
+                  self.basics_data.tb_tconst == transformed_media_details_dim.media_id,
                   how="left") \
-            .join(series_details_dim,
-                  self.basics_data.tb_tconst == series_details_dim.series_episode_id,
+            .join(transformed_series_details_dim,
+                  self.basics_data.tb_tconst == transformed_series_details_dim.series_episode_id,
                   how="left") \
-            .join(starting_date_dim,
-                  self.basics_data.tb_startyear == starting_date_dim.starting_year,
+            .join(transformed_starting_date_dim,
+                  self.basics_data.tb_startyear == transformed_starting_date_dim.starting_year,
                   how="left") \
-            .join(ending_date_dim,
-                  self.basics_data.tb_endyear == ending_date_dim.ending_year,
+            .join(transformed_ending_date_dim,
+                  self.basics_data.tb_endyear == transformed_ending_date_dim.ending_year,
                   how="left") \
             .join(bridge_joined,
                   bridge_join_condition,
@@ -335,3 +342,17 @@ class ETLManager:
             .withColumnRenamed("tr_numvotes", "num_votes")
 
         return fact_dim
+
+    def start_transformation(self):
+
+        media_details_dim = self.transform_media_details_dim()
+        starting_date_dim = self.transform_starting_date_dim()
+        ending_date_dim = self.transform_ending_date_dim()
+        series_details_dim = self.transform_series_details_dim()
+        media_member_dim, media_member_bridge = self.transform_bridge_dimensions()
+        fact_table = self.transform_fact_table(media_details_dim,
+                                               starting_date_dim,
+                                               ending_date_dim,
+                                               series_details_dim,
+                                               media_member_dim,
+                                               media_member_bridge)
