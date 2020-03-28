@@ -342,7 +342,7 @@ class ETLManager:
 
         return fact_dim
 
-    def start_transformation(self):
+    def start_transformations(self):
 
         media_details_dim = self.transform_media_details_dim()
         starting_date_dim = self.transform_starting_date_dim()
