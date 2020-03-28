@@ -239,17 +239,38 @@ class ETLManager:
         return series_details_dim
 
     def transform_starting_date_dim(self):
+        initial_sk = self.dynamo_db_manager.get_starting_year_starting_sk()
         date_window = Window.orderBy("tb_primarytitle")
         starting_date_dim = self.basics_data.withColumn("starting_date_sk", F.row_number().over(date_window) + 1) \
             .select(F.col("starting_date_sk"),
                     F.col("tb_startyear").alias("starting_year"))
+        starting_date_dim = starting_date_dim.filter(starting_date_dim.starting_year.isNotNull())
+        date_window_ = Window.orderBy('starting_date_sk')
+        starting_date_dim = starting_date_dim.withColumn("starting_date_sk",
+                                                     F.row_number().over(date_window_) + initial_sk)
+
+        last_starting_date_sk = starting_date_dim \
+            .sort(F.desc("starting_date_sk")) \
+            .first().starting_date_sk
+        self.dynamo_db_manager.update_starting_year_starting_sk(last_starting_date_sk)
         return starting_date_dim
 
     def transform_ending_date_dim(self):
+        initial_sk = self.dynamo_db_manager.get_ending_year_starting_sk()
         date_window = Window.orderBy("tb_primarytitle")
         ending_date_dim = self.basics_data.withColumn("ending_date_sk", F.row_number().over(date_window) + 1) \
             .select(F.col("ending_date_sk"),
                     F.col("tb_endyear").alias("ending_year"))
+        ending_date_dim = ending_date_dim.filter(ending_date_dim.ending_year.isNotNull())
+        date_window_ = Window.orderBy('ending_date_sk')
+        ending_date_dim = ending_date_dim.withColumn("ending_date_sk",
+                                                     F.row_number().over(date_window_) + initial_sk)
+
+        last_ending_date_sk = ending_date_dim \
+            .sort(F.desc("ending_date_sk")) \
+            .first().ending_date_sk
+        self.dynamo_db_manager.update_ending_year_starting_sk(last_ending_date_sk)
+
         return ending_date_dim
 
     def transform_fact_table(self):
