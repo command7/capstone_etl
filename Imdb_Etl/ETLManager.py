@@ -358,6 +358,7 @@ class ETLManager:
                                                series_details_dim,
                                                media_member_dim,
                                                media_member_bridge)
+        media_member_dim =  media_member_dim.drop("member_tconst")
 
         media_details_dim.write.parquet("s3://imdbetloutput/media_details_dim")
         starting_date_dim.write.parquet("s3://imdbetloutput/starting_date_dim")
