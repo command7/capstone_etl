@@ -112,7 +112,7 @@ class DynamoDbManager:
     @staticmethod
     def get_db_credentials():
         conf_parser = configparser.ConfigParser()
-        conf_parser.read_file(open("aws_config.cfg", "r"))
+        conf_parser.read_file(open("Imdb_Etl/aws_config.cfg", "r"))
 
         db_access_key = conf_parser['DynamoDbCredentials']['AWS_ACCESS_KEY']
         db_secret_key = conf_parser['DynamoDbCredentials']['AWS_SECRET_KEY']

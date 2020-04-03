@@ -26,23 +26,23 @@ class ETLManager:
     #     return self.s3_manager
 
     def get_basics_bucket_path(self, file_extension):
-        return f'../../imdb_data_gen/RealTimeDataCompressed/TitleBasicsCleaned/titleBasicsData{file_extension}.json'
+        return f'../imdb_data_gen/RealTimeDataCompressed/TitleBasicsCleaned/titleBasicsData{file_extension}.json'
         # return self.s3_manager.get_processing_path_for_basics()
 
     def get_principals_bucket_path(self, file_extension):
-        return f'../../imdb_data_gen/RealTimeDataCompressed/TitlePrincipalsCleaned/titlePrincipalsData{file_extension}.json'
+        return f'../imdb_data_gen/RealTimeDataCompressed/TitlePrincipalsCleaned/titlePrincipalsData{file_extension}.json'
         # return self.s3_manager.get_processing_path_for_principals()
 
     def get_ratings_bucket_path(self, file_extension):
-        return f'../../imdb_data_gen/RealTimeDataCompressed/TitleRatingsCleaned/titleRatingsData{file_extension}.json'
+        return f'../imdb_data_gen/RealTimeDataCompressed/TitleRatingsCleaned/titleRatingsData{file_extension}.json'
         # return self.s3_manager.get_processing_path_for_ratings()
 
     def get_names_bucket_path(self, file_extension):
-        return f'../../imdb_data_gen/RealTimeDataCompressed/NameBasics/nameBasicsData{file_extension}.json'
+        return f'../imdb_data_gen/RealTimeDataCompressed/NameBasics/nameBasicsData{file_extension}.json'
         # return self.s3_manager.get_processing_path_for_names()
 
     def get_episodes_bucket_path(self, file_extension):
-        return f'../../imdb_data_gen/RealTimeDataCompressed/TitleEpisodesCleaned/titleEpisodesData{file_extension}.json'
+        return f'../imdb_data_gen/RealTimeDataCompressed/TitleEpisodesCleaned/titleEpisodesData{file_extension}.json'
         # return self.s3_manager.get_processing_path_for_episodes()
 
     def get_ratings_data(self):
