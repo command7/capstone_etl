@@ -187,7 +187,7 @@ class ETLManager:
         media_member_dim = joined_df.withColumn("media_member_key",
                                                 F.row_number().over(member_window) + member_dim_initial_sk) \
             .select(F.col("media_member_key"),
-                    F.col("tp_tconst").alias("media_tconst"),
+                    F.col("tp_tconst").alias("member_tconst"),
                     F.col("tp_nconst").alias("member_id"),
                     F.col("nb_primaryname").alias("primary_name"),
                     F.col("tp_job").alias("job_title"),
@@ -310,8 +310,8 @@ class ETLManager:
                                                              how="left")
         bridge_join_fact_condition = [self.principals_data.tp_tconst == bridge_joined.member_tconst,
                                       self.principals_data.tp_nconst == bridge_joined.member_id]
-        fact_dim = self.basics_data.withColumn("runtime_hours", self.basics_data.tb_runtimeminutes / 60) \
-            .withColumn("runtime_seconds", self.basics_data.tb_runtimeminutes * 60) \
+        fact_dim = self.basics_data.withColumn("runtime_hours", self.basics_data.tb_runTimeMinutes / 60) \
+            .withColumn("runtime_seconds", self.basics_data.tb_runTimeMinutes * 60) \
             .join(self.ratings_data,
                   self.basics_data.tb_tconst == self.ratings_data.tr_tconst,
                   how="left") \
@@ -325,10 +325,10 @@ class ETLManager:
                   self.basics_data.tb_tconst == transformed_series_details_dim.series_episode_id,
                   how="left") \
             .join(transformed_starting_date_dim,
-                  self.basics_data.tb_startyear == transformed_starting_date_dim.starting_year,
+                  self.basics_data.tb_startYear == transformed_starting_date_dim.starting_year,
                   how="left") \
             .join(transformed_ending_date_dim,
-                  self.basics_data.tb_endyear == transformed_ending_date_dim.ending_year,
+                  self.basics_data.tb_endYear == transformed_ending_date_dim.ending_year,
                   how="left") \
             .join(bridge_joined,
                   bridge_join_fact_condition,
