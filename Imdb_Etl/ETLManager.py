@@ -369,6 +369,7 @@ class ETLManager:
                                                media_member_dim,
                                                media_member_bridge)
         media_member_dim = media_member_dim.drop("member_tconst")
+        media_member_bridge = media_member_bridge.drop("tconst_merge_key")
 
         media_details_dim.write.parquet("s3://imdbetloutput/mediadetailsdim")
         starting_date_dim.write.parquet("s3://imdbetloutput/startingdatedim")
