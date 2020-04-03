@@ -240,14 +240,14 @@ class ETLManager:
 
     def transform_starting_date_dim(self):
         initial_sk = self.dynamo_db_manager.get_starting_year_starting_sk()
-        date_window = Window.orderBy("tb_primarytitle")
-        starting_date_dim = self.basics_data.withColumn("starting_date_sk", F.row_number().over(date_window) + 1) \
+
+        starting_date_dim = self.basics_data.select("tb_startyear").distinct().na.drop()
+        date_window = Window.orderBy(starting_date_dim.tb_startyear)
+
+        starting_date_dim = starting_date_dim.withColumn("starting_date_sk", F.row_number().over(date_window)
+                                                         + initial_sk) \
             .select(F.col("starting_date_sk"),
                     F.col("tb_startyear").alias("starting_year"))
-        starting_date_dim = starting_date_dim.filter(starting_date_dim.starting_year.isNotNull())
-        date_window_ = Window.orderBy('starting_date_sk')
-        starting_date_dim = starting_date_dim.withColumn("starting_date_sk",
-                                                         F.row_number().over(date_window_) + initial_sk)
 
         last_starting_date_sk = starting_date_dim \
             .sort(F.desc("starting_date_sk")) \
@@ -257,14 +257,14 @@ class ETLManager:
 
     def transform_ending_date_dim(self):
         initial_sk = self.dynamo_db_manager.get_ending_year_starting_sk()
-        date_window = Window.orderBy("tb_primarytitle")
-        ending_date_dim = self.basics_data.withColumn("ending_date_sk", F.row_number().over(date_window) + 1) \
+
+        ending_date_dim = self.basics_data.select("tb_endyear").distinct().na.drop()
+        ending_date_window = Window.orderBy(ending_date_dim.tb_endyear)
+
+        ending_date_dim = ending_date_dim.withColumn("ending_date_sk", F.row_number().over(ending_date_window)
+                                                     + initial_sk) \
             .select(F.col("ending_date_sk"),
                     F.col("tb_endyear").alias("ending_year"))
-        ending_date_dim = ending_date_dim.filter(ending_date_dim.ending_year.isNotNull())
-        date_window_ = Window.orderBy('ending_date_sk')
-        ending_date_dim = ending_date_dim.withColumn("ending_date_sk",
-                                                     F.row_number().over(date_window_) + initial_sk)
 
         last_ending_date_sk = ending_date_dim \
             .sort(F.desc("ending_date_sk")) \
