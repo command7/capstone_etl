@@ -173,6 +173,7 @@ class ETLManager:
                                    joined_df.tp_nconst == self.names_data.nb_nconst,
                                    how="left").sort(F.asc("tb_tconst"),
                                                     F.asc("tp_ordering"))
+        joined_df = joined_df.distinct()
         member_window = Window.orderBy('tp_tconst')
         media_member_dim = joined_df.withColumn("media_member_key",
                                                 F.row_number().over(member_window) + member_dim_initial_sk) \
@@ -360,11 +361,11 @@ class ETLManager:
                                                media_member_bridge)
         media_member_dim =  media_member_dim.drop("member_tconst")
 
-        media_details_dim.write.parquet("s3://imdbetloutput/media_details_dim")
-        starting_date_dim.write.parquet("s3://imdbetloutput/starting_date_dim")
-        ending_date_dim.write.parquet("s3://imdbetloutput/ending_date_dim")
+        media_details_dim.write.parquet("s3://imdbetloutput/mediadetailsdim")
+        starting_date_dim.write.parquet("s3://imdbetloutput/startingdatedim")
+        ending_date_dim.write.parquet("s3://imdbetloutput/endingdatedim")
         series_details_dim.write.parquet("s3://imdbetloutput/seriesdetailsdim")
-        media_member_dim.write.parquet("s3://imdbetloutput/media_member_dim")
-        media_member_bridge.write.parquet("s3://imdbetloutput/media_member_bridge")
-        media_fact.write.parquet("s3://imdbetloutput/media_fact")
+        media_member_dim.write.parquet("s3://imdbetloutput/mediamemberdim")
+        media_member_bridge.write.parquet("s3://imdbetloutput/mediamemberbridge")
+        media_fact.write.parquet("s3://imdbetloutput/mediafact")
 
