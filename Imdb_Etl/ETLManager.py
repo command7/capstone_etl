@@ -350,7 +350,7 @@ class ETLManager:
                   how="left") \
             .drop("tr_tconst") \
             .drop("tb_tconst") \
-            .withColumnRenamed("tr_averagerating", "averate_rating") \
+            .withColumnRenamed("tr_averagerating", "average_rating") \
             .withColumnRenamed("tr_numvotes", "num_votes")
 
         return fact_dim
