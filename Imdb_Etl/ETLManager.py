@@ -71,6 +71,7 @@ class ETLManager:
         aws_access_key, aws_secret_key = ETLManager.get_aws_credentials()
         self.spark.sparkContext._jsc.hadoopConfiguration().set("fs.s3a.access.key", aws_access_key)
         self.spark.sparkContext._jsc.hadoopConfiguration().set("fs.s3a.secret.key", aws_secret_key)
+        self.spark.sparkContext.setLogLevel('ERROR')
 
     def stop_spark_cluster(self):
         self.spark.stop()
@@ -168,8 +169,7 @@ class ETLManager:
         last_media_details_sk = media_details_dim \
             .sort(F.desc("media_details_sk")) \
             .first().media_details_sk
-        self.dynamo_db_manager.update_media_details_starting_sk(last_media_details_sk)
-        return media_details_dim
+        return media_details_dim, last_media_details_sk
 
     def transform_bridge_dimensions(self):
         member_dim_initial_sk = self.dynamo_db_manager.get_media_member_starting_sk()
@@ -224,13 +224,11 @@ class ETLManager:
         last_media_member_starting_sk = media_member_dim \
             .sort(F.desc("media_member_key")) \
             .first().media_member_key
-        self.dynamo_db_manager.update_media_member_starting_sk(last_media_member_starting_sk)
-        self.dynamo_db_manager.update_member_bridge_starting_sk(last_member_bridge_starting_sk)
 
         media_member_bridge.show()
         media_member_dim.show()
 
-        return media_member_dim, media_member_bridge
+        return media_member_dim, media_member_bridge, last_media_member_starting_sk, last_member_bridge_starting_sk
 
     def transform_series_details_dim(self):
         initial_sk = self.dynamo_db_manager.get_series_details_starting_sk()
@@ -247,9 +245,8 @@ class ETLManager:
         last_series_details_sk = series_details_dim \
             .sort(F.desc("series_details_sk")) \
             .first().series_details_sk
-        self.dynamo_db_manager.update_series_details_starting_sk(last_series_details_sk)
 
-        return series_details_dim
+        return series_details_dim, last_series_details_sk
 
     def transform_starting_date_dim(self):
         initial_sk = self.dynamo_db_manager.get_starting_year_starting_sk()
@@ -265,8 +262,7 @@ class ETLManager:
         last_starting_date_sk = starting_date_dim \
             .sort(F.desc("starting_date_sk")) \
             .first().starting_date_sk
-        self.dynamo_db_manager.update_starting_year_starting_sk(last_starting_date_sk)
-        return starting_date_dim
+        return starting_date_dim, last_starting_date_sk
 
     def transform_ending_date_dim(self):
         initial_sk = self.dynamo_db_manager.get_ending_year_starting_sk()
@@ -282,9 +278,8 @@ class ETLManager:
         last_ending_date_sk = ending_date_dim \
             .sort(F.desc("ending_date_sk")) \
             .first().ending_date_sk
-        self.dynamo_db_manager.update_ending_year_starting_sk(last_ending_date_sk)
 
-        return ending_date_dim
+        return ending_date_dim, last_ending_date_sk
 
     @staticmethod
     def left_inner_join_two_dataframes(left_data_frame,
@@ -365,12 +360,12 @@ class ETLManager:
         return fact_dim
 
     def start_transformations(self):
-
-        media_details_dim = self.transform_media_details_dim()
-        starting_date_dim = self.transform_starting_date_dim()
-        ending_date_dim = self.transform_ending_date_dim()
-        series_details_dim = self.transform_series_details_dim()
-        media_member_dim, media_member_bridge = self.transform_bridge_dimensions()
+        media_details_dim, last_media_details_sk = self.transform_media_details_dim()
+        starting_date_dim, last_starting_date_sk = self.transform_starting_date_dim()
+        ending_date_dim, last_ending_date_sk = self.transform_ending_date_dim()
+        series_details_dim, last_series_details_sk = self.transform_series_details_dim()
+        media_member_dim, media_member_bridge,\
+        last_media_member_starting_sk, last_member_bridge_starting_sk = self.transform_bridge_dimensions()
         media_fact = self.transform_fact_table(media_details_dim,
                                                starting_date_dim,
                                                ending_date_dim,
@@ -379,6 +374,7 @@ class ETLManager:
                                                media_member_bridge)
         media_member_dim = media_member_dim.drop("member_tconst")
         media_member_bridge = media_member_bridge.drop("tconst_merge_key")
+
 
         media_details_dim.write.format('jdbc').options(
             url='jdbc:mysql://localhost/imdb_data_warehouse',
@@ -423,3 +419,10 @@ class ETLManager:
             dbtable='Media_Fact',
             user='root',
             password='rootstudent').mode('append').save()
+
+        self.dynamo_db_manager.update_media_details_starting_sk(last_media_details_sk)
+        self.dynamo_db_manager.update_media_member_starting_sk(last_media_member_starting_sk)
+        self.dynamo_db_manager.update_member_bridge_starting_sk(last_member_bridge_starting_sk)
+        self.dynamo_db_manager.update_series_details_starting_sk(last_series_details_sk)
+        self.dynamo_db_manager.update_starting_year_starting_sk(last_starting_date_sk)
+        self.dynamo_db_manager.update_ending_year_starting_sk(last_ending_date_sk)
