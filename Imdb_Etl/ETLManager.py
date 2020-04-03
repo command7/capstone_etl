@@ -20,6 +20,7 @@ class ETLManager:
 
         # self.s3_manager = S3Manager()
         self.dynamo_db_manager = DynamoDbManager()
+        self.dynamo_db_manager.reset_sk_counts()
         self.initialize_spark_session()
         for file_number in range(1, 802):
             try:
