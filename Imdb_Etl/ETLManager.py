@@ -1,26 +1,54 @@
-from Imdb_Etl.S3Manager import S3Manager
+# from Imdb_Etl.S3Manager import S3Manager
 from Imdb_Etl.DynamoDbManager import DynamoDbManager
 from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
 import configparser
+import os
 
 
 class ETLManager:
-    def __init__(self, file_extension):
+    def __init__(self):
         self.spark = None
         self.basics_data = None
         self.principals_data = None
         self.ratings_data = None
         self.names_data = None
         self.episodes_data = None
+        self.error_file_path = "etl_logs/errors.txt"
+        self.success_file_path = "etl_logs/success.txt"
 
         # self.s3_manager = S3Manager()
         self.dynamo_db_manager = DynamoDbManager()
         self.initialize_spark_session()
-        self.load_all_data(file_extension)
-        self.add_prefixes()
-        self.start_transformations()
+        for file_number in range(1, 802):
+            try:
+                self.load_all_data(file_number)
+                self.add_prefixes()
+                self.start_transformations()
+                self.log_success(f'File {file_number} processed')
+                print(f'{file_number} of 801 completed')
+            except Exception as e:
+                self.log_error(f'File {file_number} failed')
+                print(e)
+
+    error_file_path = "etl_logs/errors.txt"
+    success_file_path = "etl_logs/success.txt"
+
+    @staticmethod
+    def get_open_flag(file_name):
+        if os.path.exists(file_name):
+            return "a"
+        else:
+            return "w"
+
+    def log_error(self, message):
+        with open(self.error_file_path, ETLManager.get_open_flag(self.error_file_path)) as log_file:
+            log_file.write(message + "\n")
+
+    def log_success(self, message):
+        with open(self.success_file_path, ETLManager.get_open_flag(self.success_file_path)) as log_file:
+            log_file.write(message + "\n")
 
     # def get_s3_manager(self):
     #     return self.s3_manager
