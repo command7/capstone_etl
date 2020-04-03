@@ -76,37 +76,37 @@ class DynamoDbManager:
         response = self.db_table.update_item(Key={"stat_name": "media_details_starting_sk"},
                                              UpdateExpression="set sk_value = :val",
                                              ExpressionAttributeValues={
-                                                 ':val': 0
+                                                 ':val': 1
                                              })
         response = self.db_table.update_item(Key={"stat_name": "media_type_starting_sk"},
                                              UpdateExpression="set sk_value = :val",
                                              ExpressionAttributeValues={
-                                                 ':val': 0
+                                                 ':val': 1
                                              })
         response = self.db_table.update_item(Key={"stat_name": "series_details_starting_sk"},
                                              UpdateExpression="set sk_value = :val",
                                              ExpressionAttributeValues={
-                                                 ':val': 0
+                                                 ':val': 1
                                              })
         response = self.db_table.update_item(Key={"stat_name": "media_member_starting_sk"},
                                              UpdateExpression="set sk_value = :val",
                                              ExpressionAttributeValues={
-                                                 ':val': 0
+                                                 ':val': 1
                                              })
         response = self.db_table.update_item(Key={"stat_name": "member_bridge_starting_sk"},
                                              UpdateExpression="set sk_value = :val",
                                              ExpressionAttributeValues={
-                                                 ':val': 0
+                                                 ':val': 1
                                              })
         response = self.db_table.update_item(Key={"stat_name": "starting_date_sk"},
                                             UpdateExpression="set sk_value = :val",
                                             ExpressionAttributeValues={
-                                                ':val': 0
+                                                ':val': 1
                                             })
         response = self.db_table.update_item(Key={"stat_name": "ending_date_sk"},
                                             UpdateExpression="set sk_value = :val",
                                             ExpressionAttributeValues={
-                                                ':val': 0
+                                                ':val': 1
                                             })
 
     @staticmethod
