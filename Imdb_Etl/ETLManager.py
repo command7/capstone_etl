@@ -15,29 +15,34 @@ class ETLManager:
         self.names_data = None
         self.episodes_data = None
 
-        self.s3_manager = S3Manager()
+        # self.s3_manager = S3Manager()
         self.dynamo_db_manager = DynamoDbManager()
         self.initialize_spark_session()
         self.load_all_data()
         self.add_prefixes()
 
-    def get_s3_manager(self):
-        return self.s3_manager
+    # def get_s3_manager(self):
+    #     return self.s3_manager
 
-    def get_basics_bucket_path(self):
-        return self.s3_manager.get_processing_path_for_basics()
+    def get_basics_bucket_path(self, file_extension):
+        return f'../../imdb_data_gen/RealTimeDataCompressed/TitleBasicsCleaned/titleBasicsData{file_extension}.json'
+        # return self.s3_manager.get_processing_path_for_basics()
 
-    def get_principals_bucket_path(self):
-        return self.s3_manager.get_processing_path_for_principals()
+    def get_principals_bucket_path(self, file_extension):
+        return f'../../imdb_data_gen/RealTimeDataCompressed/TitlePrincipalsCleaned/titlePrincipalsData{file_extension}.json'
+        # return self.s3_manager.get_processing_path_for_principals()
 
-    def get_ratings_bucket_path(self):
-        return self.s3_manager.get_processing_path_for_ratings()
+    def get_ratings_bucket_path(self, file_extension):
+        return f'../../imdb_data_gen/RealTimeDataCompressed/TitleRatingsCleaned/titleRatingsData{file_extension}.json'
+        # return self.s3_manager.get_processing_path_for_ratings()
 
-    def get_names_bucket_path(self):
-        return self.s3_manager.get_processing_path_for_names()
+    def get_names_bucket_path(self, file_extension):
+        return f'../../imdb_data_gen/RealTimeDataCompressed/NameBasics/nameBasicsData{file_extension}.json'
+        # return self.s3_manager.get_processing_path_for_names()
 
-    def get_episodes_bucket_path(self):
-        return self.s3_manager.get_processing_path_for_episodes()
+    def get_episodes_bucket_path(self, file_extension):
+        return f'../../imdb_data_gen/RealTimeDataCompressed/TitleEpisodesCleaned/titleEpisodesData{file_extension}.json'
+        # return self.s3_manager.get_processing_path_for_episodes()
 
     def get_ratings_data(self):
         return self.ratings_data
@@ -82,27 +87,27 @@ class ETLManager:
     def read_parquet_file(self, file_path_to_read):
         return self.spark.read.parquet(file_path_to_read)
 
-    def load_basics_data(self):
-        self.basics_data = self.read_parquet_file(self.get_basics_bucket_path())
+    def load_basics_data(self, file_extension):
+        self.basics_data = self.read_parquet_file(self.get_basics_bucket_path(file_extension))
 
-    def load_principals_data(self):
-        self.principals_data = self.read_parquet_file(self.get_principals_bucket_path())
+    def load_principals_data(self, file_extension):
+        self.principals_data = self.read_parquet_file(self.get_principals_bucket_path(file_extension))
 
-    def load_ratings_data(self):
-        self.ratings_data = self.read_parquet_file(self.get_ratings_bucket_path())
+    def load_ratings_data(self, file_extension):
+        self.ratings_data = self.read_parquet_file(self.get_ratings_bucket_path(file_extension))
 
-    def load_names_data(self):
-        self.names_data = self.read_parquet_file(self.get_names_bucket_path())
+    def load_names_data(self, file_extension):
+        self.names_data = self.read_parquet_file(self.get_names_bucket_path(file_extension))
 
-    def load_episodes_data(self):
-        self.episodes_data = self.read_parquet_file(self.get_episodes_bucket_path())
+    def load_episodes_data(self, file_extension):
+        self.episodes_data = self.read_parquet_file(self.get_episodes_bucket_path(file_extension))
 
-    def load_all_data(self):
-        self.load_basics_data()
-        self.load_principals_data()
-        self.load_ratings_data()
-        self.load_names_data()
-        self.load_episodes_data()
+    def load_all_data(self, file_extension):
+        self.load_basics_data(file_extension)
+        self.load_principals_data(file_extension)
+        self.load_ratings_data(file_extension)
+        self.load_names_data(file_extension)
+        self.load_episodes_data(file_extension)
 
     def add_prefix_to_basics_data(self):
         self.basics_data = self.basics_data.select([F.col(c).alias("tb_" + c) for c in self.basics_data.columns])
@@ -371,10 +376,46 @@ class ETLManager:
         media_member_dim = media_member_dim.drop("member_tconst")
         media_member_bridge = media_member_bridge.drop("tconst_merge_key")
 
-        media_details_dim.write.parquet("s3://imdbetloutput/mediadetailsdim")
-        starting_date_dim.write.parquet("s3://imdbetloutput/startingdatedim")
-        ending_date_dim.write.parquet("s3://imdbetloutput/endingdatedim")
-        series_details_dim.write.parquet("s3://imdbetloutput/seriesdetailsdim")
-        media_member_dim.write.parquet("s3://imdbetloutput/mediamemberdim")
-        media_member_bridge.write.parquet("s3://imdbetloutput/mediamemberbridge")
-        media_fact.write.parquet("s3://imdbetloutput/mediafact")
+        media_details_dim.write.format('jdbc').options(
+            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            driver='com.mysql.jdbc.Driver',
+            dbtable='Media_Details_Dim',
+            user='root',
+            password='rootstudent').mode('append').save()
+
+        media_member_bridge.write.format('jdbc').options(
+            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            driver='com.mysql.jdbc.Driver',
+            dbtable='Media_Member_Bridge',
+            user='root',
+            password='rootstudent').mode('append').save()
+        media_member_dim.write.format('jdbc').options(
+            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            driver='com.mysql.jdbc.Driver',
+            dbtable='Media_Member_Dim',
+            user='root',
+            password='rootstudent').mode('append').save()
+        series_details_dim.write.format('jdbc').options(
+            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            driver='com.mysql.jdbc.Driver',
+            dbtable='Series_Details_Dim',
+            user='root',
+            password='rootstudent').mode('append').save()
+        starting_date_dim.write.format('jdbc').options(
+            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            driver='com.mysql.jdbc.Driver',
+            dbtable='Starting_Date_Dim',
+            user='root',
+            password='rootstudent').mode('append').save()
+        ending_date_dim.write.format('jdbc').options(
+            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            driver='com.mysql.jdbc.Driver',
+            dbtable='Ending_Date_Dim',
+            user='root',
+            password='rootstudent').mode('append').save()
+        media_fact.write.format('jdbc').options(
+            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            driver='com.mysql.jdbc.Driver',
+            dbtable='Media_Fact',
+            user='root',
+            password='rootstudent').mode('append').save()
