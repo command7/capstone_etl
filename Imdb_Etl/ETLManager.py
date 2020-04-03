@@ -165,7 +165,6 @@ class ETLManager:
                     F.col("tb_originalTitle").alias("original_title"),
                     F.col("tb_titleType").alias("media_type"),
                     F.col("tb_genre").alias("genre"))
-        media_details_dim.show()
         last_media_details_sk = media_details_dim \
             .sort(F.desc("media_details_sk")) \
             .first().media_details_sk
@@ -225,9 +224,6 @@ class ETLManager:
             .sort(F.desc("media_member_key")) \
             .first().media_member_key
 
-        media_member_bridge.show()
-        media_member_dim.show()
-
         return media_member_dim, media_member_bridge, last_media_member_starting_sk, last_member_bridge_starting_sk
 
     def transform_series_details_dim(self):
@@ -241,7 +237,6 @@ class ETLManager:
                     F.col("te_seasonnumber").alias("season_number"),
                     F.col("te_episodenumber").alias("episode_number"))
 
-        series_details_dim.show()
         last_series_details_sk = series_details_dim \
             .sort(F.desc("series_details_sk")) \
             .first().series_details_sk
