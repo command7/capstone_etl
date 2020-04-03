@@ -20,6 +20,7 @@ class ETLManager:
         self.initialize_spark_session()
         self.load_all_data()
         self.add_prefixes()
+        self.start_transformations()
 
     # def get_s3_manager(self):
     #     return self.s3_manager
