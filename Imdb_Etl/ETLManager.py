@@ -191,18 +191,22 @@ class ETLManager:
                                                F.col("tp_nconst"),
                                                F.col("tp_ordering"))
 
+        member_bridge_join_condition = [media_member_bridge.tp_nconst == media_member_dim.member_id,
+                              media_member_bridge.tb_tconst == media_member_dim.member_tconst]
         media_member_bridge = media_member_bridge.join(media_member_dim,
-                                                       media_member_bridge.tp_nconst == media_member_dim.member_id,
+                                                      member_bridge_join_condition,
                                                        how="inner") \
             .sort(F.asc("tb_tconst"),
                   F.asc("media_member_key")) \
-            .select(F.col("tb_tconst").alias("media_member_group_key"),
+            .select(F.col("tb_tconst").alias("tconst_merge_key"),
+                    F.col("tb_tconst").alias("media_member_group_key"),
                     F.col("media_member_key"))
 
         bridge_window = Window.orderBy(media_member_bridge.media_member_group_key)
         media_member_bridge = media_member_bridge \
             .withColumn("rank", F.dense_rank().over(bridge_window) + member_bridge_initial_sk) \
             .select(F.col("rank").alias("media_member_group_key"),
+                    F.col("tconst_merge_key"),
                     F.col("media_member_key"))
 
         last_member_bridge_starting_sk = media_member_bridge \
@@ -288,10 +292,15 @@ class ETLManager:
                              transformed_series_details_dim,
                              transformed_media_member_dim,
                              transformed_media_member_bridge):
-        bridge_joined = self.left_inner_join_two_dataframes(transformed_media_member_bridge,
-                                                            transformed_media_member_dim)
-        bridge_join_condition = [self.principals_data.tp_tconst == bridge_joined.member_tconst,
-                                 self.principals_data.tp_nconst == bridge_joined.member_id]
+
+        bridge_join_condition = [
+            transformed_media_member_bridge.tconst_merge_key == transformed_media_member_dim.member_tconst,
+            transformed_media_member_bridge.media_member_key == transformed_media_member_dim.media_member_key]
+        bridge_joined = transformed_media_member_bridge.join(transformed_media_member_dim,
+                                                             bridge_join_condition,
+                                                             how="left")
+        bridge_join_fact_condition = [self.principals_data.tp_tconst == bridge_joined.member_tconst,
+                                      self.principals_data.tp_nconst == bridge_joined.member_id]
         fact_dim = self.basics_data.withColumn("runtime_hours", self.basics_data.tb_runtimeminutes / 60) \
             .withColumn("runtime_seconds", self.basics_data.tb_runtimeminutes * 60) \
             .join(self.ratings_data,
@@ -313,7 +322,7 @@ class ETLManager:
                   self.basics_data.tb_endyear == transformed_ending_date_dim.ending_year,
                   how="left") \
             .join(bridge_joined,
-                  bridge_join_condition,
+                  bridge_join_fact_condition,
                   how="left")
 
         fact_dim = fact_dim.withColumn("ending_date_sk", F.when(F.isnull(fact_dim.ending_date_sk),
@@ -359,7 +368,7 @@ class ETLManager:
                                                series_details_dim,
                                                media_member_dim,
                                                media_member_bridge)
-        media_member_dim =  media_member_dim.drop("member_tconst")
+        media_member_dim = media_member_dim.drop("member_tconst")
 
         media_details_dim.write.parquet("s3://imdbetloutput/mediadetailsdim")
         starting_date_dim.write.parquet("s3://imdbetloutput/startingdatedim")
@@ -368,4 +377,3 @@ class ETLManager:
         media_member_dim.write.parquet("s3://imdbetloutput/mediamemberdim")
         media_member_bridge.write.parquet("s3://imdbetloutput/mediamemberbridge")
         media_fact.write.parquet("s3://imdbetloutput/mediafact")
-
