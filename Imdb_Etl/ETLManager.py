@@ -87,20 +87,23 @@ class ETLManager:
     def read_parquet_file(self, file_path_to_read):
         return self.spark.read.parquet(file_path_to_read)
 
+    def read_json_file(self, file_path_to_read):
+        return self.spark.read.json(file_path_to_read)
+
     def load_basics_data(self, file_extension):
-        self.basics_data = self.read_parquet_file(self.get_basics_bucket_path(file_extension))
+        self.basics_data = self.read_json_file(self.get_basics_bucket_path(file_extension))
 
     def load_principals_data(self, file_extension):
-        self.principals_data = self.read_parquet_file(self.get_principals_bucket_path(file_extension))
+        self.principals_data = self.read_json_file(self.get_principals_bucket_path(file_extension))
 
     def load_ratings_data(self, file_extension):
-        self.ratings_data = self.read_parquet_file(self.get_ratings_bucket_path(file_extension))
+        self.ratings_data = self.read_json_file(self.get_ratings_bucket_path(file_extension))
 
     def load_names_data(self, file_extension):
-        self.names_data = self.read_parquet_file(self.get_names_bucket_path(file_extension))
+        self.names_data = self.read_json_file(self.get_names_bucket_path(file_extension))
 
     def load_episodes_data(self, file_extension):
-        self.episodes_data = self.read_parquet_file(self.get_episodes_bucket_path(file_extension))
+        self.episodes_data = self.read_json_file(self.get_episodes_bucket_path(file_extension))
 
     def load_all_data(self, file_extension):
         self.load_basics_data(file_extension)
