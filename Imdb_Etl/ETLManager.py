@@ -377,44 +377,44 @@ class ETLManager:
 
 
         media_details_dim.write.format('jdbc').options(
-            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            url='jdbc:mysql://localhost/imdb_data_warehouse?autoReconnect=true&useSSL=false',
             driver='com.mysql.jdbc.Driver',
             dbtable='Media_Details_Dim',
             user='root',
             password='rootstudent').mode('append').save()
 
         media_member_bridge.write.format('jdbc').options(
-            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            url='jdbc:mysql://localhost/imdb_data_warehouse?autoReconnect=true&useSSL=false',
             driver='com.mysql.jdbc.Driver',
             dbtable='Media_Member_Bridge',
             user='root',
             password='rootstudent').mode('append').save()
         media_member_dim.write.format('jdbc').options(
-            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            url='jdbc:mysql://localhost/imdb_data_warehouse?autoReconnect=true&useSSL=false',
             driver='com.mysql.jdbc.Driver',
             dbtable='Media_Member_Dim',
             user='root',
             password='rootstudent').mode('append').save()
         series_details_dim.write.format('jdbc').options(
-            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            url='jdbc:mysql://localhost/imdb_data_warehouse?autoReconnect=true&useSSL=false',
             driver='com.mysql.jdbc.Driver',
             dbtable='Series_Details_Dim',
             user='root',
             password='rootstudent').mode('append').save()
         starting_date_dim.write.format('jdbc').options(
-            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            url='jdbc:mysql://localhost/imdb_data_warehouse?autoReconnect=true&useSSL=false',
             driver='com.mysql.jdbc.Driver',
             dbtable='Starting_Date_Dim',
             user='root',
             password='rootstudent').mode('append').save()
         ending_date_dim.write.format('jdbc').options(
-            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            url='jdbc:mysql://localhost/imdb_data_warehouse?autoReconnect=true&useSSL=false',
             driver='com.mysql.jdbc.Driver',
             dbtable='Ending_Date_Dim',
             user='root',
             password='rootstudent').mode('append').save()
         media_fact.write.format('jdbc').options(
-            url='jdbc:mysql://localhost/imdb_data_warehouse',
+            url='jdbc:mysql://localhost/imdb_data_warehouse?autoReconnect=true&useSSL=false',
             driver='com.mysql.jdbc.Driver',
             dbtable='Media_Fact',
             user='root',
