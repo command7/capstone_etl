@@ -7,7 +7,7 @@ import configparser
 
 
 class ETLManager:
-    def __init__(self):
+    def __init__(self, file_extension):
         self.spark = None
         self.basics_data = None
         self.principals_data = None
@@ -18,7 +18,7 @@ class ETLManager:
         # self.s3_manager = S3Manager()
         self.dynamo_db_manager = DynamoDbManager()
         self.initialize_spark_session()
-        self.load_all_data()
+        self.load_all_data(file_extension)
         self.add_prefixes()
         self.start_transformations()
 
