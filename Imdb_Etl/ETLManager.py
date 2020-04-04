@@ -295,13 +295,16 @@ class ETLManager:
         ending_date_window = Window.orderBy(ending_date_dim.tb_endyear)
 
         ending_date_dim = ending_date_dim.withColumn("ending_date_sk", F.row_number().over(ending_date_window)
-                                                     + initial_sk) \
+                                                     + initial_sk)\
             .select(F.col("ending_date_sk"),
                     F.col("tb_endyear").alias("ending_year"))
 
-        last_ending_date_sk = ending_date_dim \
-            .sort(F.desc("ending_date_sk")) \
-            .first().ending_date_sk
+        try:
+            last_ending_date_sk = ending_date_dim \
+                .sort(F.desc("ending_date_sk")) \
+                .first().ending_date_sk
+        except:
+            last_ending_date_sk = None
 
         return ending_date_dim, last_ending_date_sk
 
