@@ -4,6 +4,7 @@ from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
 import configparser
+import os
 
 
 class ETLManager:
@@ -155,7 +156,6 @@ class ETLManager:
                     F.col("tb_originalTitle").alias("original_title"),
                     F.col("tb_titleType").alias("media_type"),
                     F.col("tb_genre").alias("genre"))
-        media_details_dim.show()
         last_media_details_sk = media_details_dim \
             .sort(F.desc("media_details_sk")) \
             .first().media_details_sk
@@ -178,7 +178,7 @@ class ETLManager:
         media_member_dim = joined_df.withColumn("media_member_key",
                                                 F.row_number().over(member_window) + member_dim_initial_sk) \
             .select(F.col("media_member_key"),
-                    F.col("tp_tconst").alias("media_tconst"),
+                    F.col("tp_tconst").alias("member_tconst"),
                     F.col("tp_nconst").alias("member_id"),
                     F.col("nb_primaryname").alias("primary_name"),
                     F.col("tp_job").alias("job_title"),
@@ -218,9 +218,6 @@ class ETLManager:
         self.dynamo_db_manager.update_media_member_starting_sk(last_media_member_starting_sk)
         self.dynamo_db_manager.update_member_bridge_starting_sk(last_member_bridge_starting_sk)
 
-        media_member_bridge.show()
-        media_member_dim.show()
-
         return media_member_dim, media_member_bridge
 
     def transform_series_details_dim(self):
@@ -234,7 +231,6 @@ class ETLManager:
                     F.col("te_seasonnumber").alias("season_number"),
                     F.col("te_episodenumber").alias("episode_number"))
 
-        series_details_dim.show()
         last_series_details_sk = series_details_dim \
             .sort(F.desc("series_details_sk")) \
             .first().series_details_sk
