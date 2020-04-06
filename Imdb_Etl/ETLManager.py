@@ -267,11 +267,13 @@ class ETLManager:
                                                      + initial_sk) \
             .select(F.col("ending_date_sk"),
                     F.col("tb_endyear").alias("ending_year"))
-
-        last_ending_date_sk = ending_date_dim \
-            .sort(F.desc("ending_date_sk")) \
-            .first().ending_date_sk
-        self.dynamo_db_manager.update_ending_year_starting_sk(last_ending_date_sk)
+        try:
+            last_ending_date_sk = ending_date_dim \
+                .sort(F.desc("ending_date_sk")) \
+                .first().ending_date_sk
+            self.dynamo_db_manager.update_ending_year_starting_sk(last_ending_date_sk)
+        except:
+            self.dynamo_db_manager.update_ending_year_starting_sk(None)
 
         return ending_date_dim
 
