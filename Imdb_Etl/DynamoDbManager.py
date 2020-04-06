@@ -118,8 +118,3 @@ class DynamoDbManager:
         db_secret_key = conf_parser['DynamoDbCredentials']['AWS_SECRET_KEY']
 
         return db_access_key, db_secret_key
-
-
-if __name__ == "__main__":
-    test = DynamoDbManager()
-    test.reset_sk_counts()
