@@ -17,11 +17,12 @@ class DynamoDbManager:
         return response["Items"][0]["sk_value"]
 
     def increment_sk_count(self, attribute_name, value_to_change):
-        response = self.db_table.update_item(Key={"stat_name": attribute_name},
-                                             UpdateExpression="set sk_value = :val",
-                                             ExpressionAttributeValues={
-                                                 ':val': value_to_change
-                                             })
+        if value_to_change is not None:
+            response = self.db_table.update_item(Key={"stat_name": attribute_name},
+                                                 UpdateExpression="set sk_value = :val",
+                                                 ExpressionAttributeValues={
+                                                     ':val': value_to_change
+                                                 })
 
     def get_media_details_starting_sk(self):
         return self.get_sk_count("media_details_starting_sk")
