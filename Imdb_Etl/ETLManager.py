@@ -4,7 +4,6 @@ from pyspark.sql import SparkSession
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
 import configparser
-import os
 
 
 class ETLManager:
@@ -21,6 +20,9 @@ class ETLManager:
         self.initialize_spark_session()
         self.load_all_data()
         self.add_prefixes()
+        self.show_all_data()
+        self.start_transformations()
+        self.stop_spark_cluster()
 
     def get_s3_manager(self):
         return self.s3_manager
@@ -68,7 +70,7 @@ class ETLManager:
         self.spark.sparkContext._jsc.hadoopConfiguration().set("fs.s3a.secret.key", aws_secret_key)
 
     def stop_spark_cluster(self):
-        self.spark.stop()
+        self.spark.sparkContext.stop()
 
     def initialize_spark_session(self):
         try:
@@ -367,10 +369,10 @@ class ETLManager:
         media_member_dim = media_member_dim.drop("member_tconst")
         media_member_bridge = media_member_bridge.drop("tconst_merge_key")
 
-        media_details_dim.write.parquet("s3://imdbetloutput/mediadetailsdim")
-        starting_date_dim.write.parquet("s3://imdbetloutput/startingdatedim")
-        ending_date_dim.write.parquet("s3://imdbetloutput/endingdatedim")
-        series_details_dim.write.parquet("s3://imdbetloutput/seriesdetailsdim")
-        media_member_dim.write.parquet("s3://imdbetloutput/mediamemberdim")
-        media_member_bridge.write.parquet("s3://imdbetloutput/mediamemberbridge")
-        media_fact.write.parquet("s3://imdbetloutput/mediafact")
+        media_details_dim.write.parquet("s3://imdbetloutputz/mediadetailsdim")
+        starting_date_dim.write.parquet("s3://imdbetloutputz/startingdatedim")
+        ending_date_dim.write.parquet("s3://imdbetloutputz/endingdatedim")
+        series_details_dim.write.parquet("s3://imdbetloutputz/seriesdetailsdim")
+        media_member_dim.write.parquet("s3://imdbetloutputz/mediamemberdim")
+        media_member_bridge.write.parquet("s3://imdbetloutputz/mediamemberbridge")
+        media_fact.write.parquet("s3://imdbetloutputz/mediafact")
