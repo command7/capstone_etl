@@ -59,8 +59,8 @@ class ETLManager:
         conf_parser = configparser.ConfigParser()
         conf_parser.read_file(open("aws_config.cfg", "r"))
 
-        aws_access_key = conf_parser['S3Credentials']['AWS_ACCESS_KEY']
-        aws_secret_key = conf_parser['S3Credentials']['AWS_SECRET_KEY']
+        aws_access_key = conf_parser['Root']['AWS_ACCESS_KEY']
+        aws_secret_key = conf_parser['Root']['AWS_SECRET_KEY']
 
         return aws_access_key, aws_secret_key
 
@@ -371,10 +371,11 @@ class ETLManager:
         media_member_dim = media_member_dim.drop("member_tconst")
         media_member_bridge = media_member_bridge.drop("tconst_merge_key")
 
-        media_details_dim.write.parquet("s3://imdbetloutputz/mediadetailsdim")
-        starting_date_dim.write.parquet("s3://imdbetloutputz/startingdatedim")
-        ending_date_dim.write.parquet("s3://imdbetloutputz/endingdatedim")
-        series_details_dim.write.parquet("s3://imdbetloutputz/seriesdetailsdim")
-        media_member_dim.write.parquet("s3://imdbetloutputz/mediamemberdim")
-        media_member_bridge.write.parquet("s3://imdbetloutputz/mediamemberbridge")
-        media_fact.write.parquet("s3://imdbetloutputz/mediafact")
+        media_details_dim.write.csv("s3a://imdbetltemp/mediadetailsdim")
+        starting_date_dim.write.csv("s3a://imdbetltemp/startingdatedim")
+        ending_date_dim.write.csv("s3a://imdbetltemp/endingdatedim")
+        series_details_dim.write.csv("s3a://imdbetltemp/seriesdetailsdim")
+        media_member_bridge.write.csv("s3a://imdbetltemp/mediamemberbridge")
+        media_member_dim.write.csv("s3a://imdbetltemp/mediamemberdim")
+        media_fact.write.csv("s3a://imdbetltemp/mediafact")
+
