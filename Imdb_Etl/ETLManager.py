@@ -1,9 +1,12 @@
 from Imdb_Etl.S3Manager import S3Manager
 from Imdb_Etl.DynamoDbManager import DynamoDbManager
 from pyspark.sql import SparkSession
+from pyspark.sql.types import IntegerType
 import pyspark.sql.functions as F
 from pyspark.sql.window import Window
 import configparser
+import psycopg2
+from boto3 import resource
 
 
 class ETLManager:
@@ -14,6 +17,8 @@ class ETLManager:
         self.ratings_data = None
         self.names_data = None
         self.episodes_data = None
+        self.redshift_connection = None
+        self.initialize_redshift_connection()
 
         self.s3_manager = S3Manager()
         self.dynamo_db_manager = DynamoDbManager()
@@ -22,7 +27,15 @@ class ETLManager:
         self.add_prefixes()
         self.show_all_data()
         self.start_transformations()
+        self.write_data_to_redshift()
         self.stop_spark_cluster()
+
+    def initialize_redshift_connection(self):
+        conn_string = "dbname='imdb_data_warehouse' port='5439' user='root' password='rootStudent1!' host='redshift-test-cluster.cehyxlfhnwj9.us-east-1.redshift.amazonaws.com'"
+        self.redshift_connection = psycopg2.connect(conn_string);
+
+    def get_redshift_connection(self):
+        return self.redshift_connection
 
     def get_s3_manager(self):
         return self.s3_manager
@@ -194,9 +207,9 @@ class ETLManager:
                                                F.col("tp_ordering"))
 
         member_bridge_join_condition = [media_member_bridge.tp_nconst == media_member_dim.member_id,
-                              media_member_bridge.tb_tconst == media_member_dim.member_tconst]
+                                        media_member_bridge.tb_tconst == media_member_dim.member_tconst]
         media_member_bridge = media_member_bridge.join(media_member_dim,
-                                                      member_bridge_join_condition,
+                                                       member_bridge_join_condition,
                                                        how="inner") \
             .sort(F.asc("tb_tconst"),
                   F.asc("media_member_key")) \
@@ -355,8 +368,47 @@ class ETLManager:
 
         return fact_dim
 
-    def start_transformations(self):
+    @staticmethod
+    def formulate_copy_command(table_name, s3_data_path):
+        aws_access_key, aws_secret_key = ETLManager.get_aws_credentials()
+        return f"COPY {table_name} FROM '{s3_data_path}' access_key_id '{aws_access_key}' secret_access_key '{aws_secret_key}' FORMAT CSV"
 
+    def empty_temp_bucket(self):
+        acc, sec = self.get_aws_credentials()
+        s3_resource = resource("s3",
+                               region_name='us-east-1',
+                               aws_access_key_id=acc,
+                               aws_secret_access_key=sec)
+
+        temp_bucket = s3_resource.Bucket('imdbetltemp')
+
+        temp_bucket.objects.all().delete()
+
+    def write_data_to_redshift(self):
+        redshift_cursor = self.get_redshift_connection().cursor()
+
+        mdd_copy_command = ETLManager.formulate_copy_command('media_details_dim', 's3://imdbetltemp/mediadetailsdim')
+        sdd_copy_command = ETLManager.formulate_copy_command('starting_date_dim', 's3://imdbetltemp/startingdatedim')
+        edd_copy_command = ETLManager.formulate_copy_command('ending_date_dim', 's3://imdbetltemp/endingdatedim')
+        serdd_copy_command = ETLManager.formulate_copy_command('series_details_dim',
+                                                               's3://imdbetltemp/seriesdetailsdim')
+        mmb_copy_command = ETLManager.formulate_copy_command('media_member_bridge',
+                                                             's3://imdbetltemp/mediamemberbridge')
+        mmd_copy_command = ETLManager.formulate_copy_command('media_member_dim', 's3://imdbetltemp/mediamemberdim')
+        mf_copy_command = ETLManager.formulate_copy_command('media_fact', 's3://imdbetltemp/mediafact')
+
+        redshift_cursor.execute(mdd_copy_command)
+        redshift_cursor.execute(sdd_copy_command)
+        redshift_cursor.execute(edd_copy_command)
+        redshift_cursor.execute(serdd_copy_command)
+        redshift_cursor.execute(mmb_copy_command)
+        redshift_cursor.execute(mmd_copy_command)
+        redshift_cursor.execute(mf_copy_command)
+
+        self.get_redshift_connection().commit()
+        self.get_redshift_connection().close()
+
+    def start_transformations(self):
         media_details_dim = self.transform_media_details_dim()
         starting_date_dim = self.transform_starting_date_dim()
         ending_date_dim = self.transform_ending_date_dim()
@@ -368,8 +420,12 @@ class ETLManager:
                                                series_details_dim,
                                                media_member_dim,
                                                media_member_bridge)
+        media_fact = media_fact.withColumn('runtime_seconds', media_fact.runtime_seconds.cast(IntegerType()))
+        media_fact = media_fact.withColumn('runtime_minutes', media_fact.runtime_minutes.cast(IntegerType()))
         media_member_dim = media_member_dim.drop("member_tconst")
         media_member_bridge = media_member_bridge.drop("tconst_merge_key")
+
+        self.empty_temp_bucket()
 
         media_details_dim.write.csv("s3a://imdbetltemp/mediadetailsdim")
         starting_date_dim.write.csv("s3a://imdbetltemp/startingdatedim")
@@ -378,4 +434,3 @@ class ETLManager:
         media_member_bridge.write.csv("s3a://imdbetltemp/mediamemberbridge")
         media_member_dim.write.csv("s3a://imdbetltemp/mediamemberdim")
         media_fact.write.csv("s3a://imdbetltemp/mediafact")
-
