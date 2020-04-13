@@ -1,4 +1,6 @@
 import configparser
+import time
+
 import boto3
 from datetime import datetime
 
@@ -66,11 +68,12 @@ class BucketManager:
         return access_key, secret_key
 
     def parse_bucket(self):
+        self.file_paths = list()
         s3_bucket = self.s3_resource.Bucket(self.get_bucket_name())
         for each_file_path in s3_bucket.objects.all():
             formatted_file_path = self.construct_complete_s3_address(each_file_path.key)
             file_upload_time = each_file_path.last_modified
-            if BucketManager.is_file_to_be_processed(each_file_path.key) and not self.is_file_too_recent(file_upload_time):
+            if BucketManager.is_file_to_be_processed(each_file_path.key): #and not self.is_file_too_recent(file_upload_time):
                 self.add_file_path(formatted_file_path)
 
     @staticmethod
@@ -99,8 +102,12 @@ class BucketManager:
 
     def change_files_to_processing_status(self):
         new_file_paths = list()
-
-        for each_file_path in self.get_file_paths():
+        yet_to_process_file_paths = self.get_file_paths()
+        while len(yet_to_process_file_paths) == 0:
+            time.sleep(10)
+            self.parse_bucket()
+            yet_to_process_file_paths = self.get_file_paths()
+        for each_file_path in yet_to_process_file_paths:
             new_file_paths.append(self.move_file_to_processing_status(each_file_path))
 
         self.set_file_paths(new_file_paths)
@@ -111,7 +118,7 @@ class BucketManager:
         return int(diff_minutes)
 
     def is_file_too_recent(self, file_upload_date):
-        if self.get_minutes_difference(file_upload_date) < 3:
+        if self.get_minutes_difference(file_upload_date) < 1:
             return True
         return False
 
